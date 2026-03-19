@@ -134,7 +134,26 @@ class IFLOrchestrator:
                 loss_history.append(matrix.compute_loss())
                 continue
 
-            # 建構提示並採樣
+            # 直接執行 SMT 主測試（D=True）並無條件加入測試套件
+            smt_case = self._z3_model_to_python(
+                smt_result.model or {}, self.config.domain_types
+            )
+            smt_test_id: str | None = None
+            if smt_case:
+                smt_test_id = self._run_test(instrumented_module, smt_case, log)
+                test_suite.append({**smt_case, "__test_id": smt_test_id})
+
+            # 直接執行 SMT 互補測試（D=False），與主測試形成保證的 MC/DC 對
+            if smt_result.complement_model:
+                comp_case = self._z3_model_to_python(
+                    smt_result.complement_model, self.config.domain_types
+                )
+                if comp_case:
+                    comp_id = self._run_test(instrumented_module, comp_case, log)
+                    self.gate.evaluate(matrix, log, comp_id)  # 更新矩陣
+                    test_suite.append({**comp_case, "__test_id": comp_id})
+
+            # 建構提示並採樣（LLM 補充多樣性）
             p_prompt = self.prompt.build(
                 dn,
                 gap,
@@ -208,6 +227,30 @@ class IFLOrchestrator:
         pi._IFL_GLOBAL_LOG = log
         setattr(module, "_ifl_probe", pi._ifl_probe)
         setattr(module, "_ifl_record_decision", pi._ifl_record_decision)
+
+    @staticmethod
+    def _z3_model_to_python(
+        model: dict[str, object],
+        domain_types: dict[str, str],
+    ) -> dict[str, object]:
+        """將 Z3 model 字典轉換為 Python 原生值。"""
+        import z3 as _z3
+
+        result: dict[str, object] = {}
+        for var_name, val in model.items():
+            if val is None:
+                continue
+            t = domain_types.get(var_name, "int")
+            try:
+                if t == "bool":
+                    result[var_name] = bool(_z3.is_true(val))
+                elif t == "int":
+                    result[var_name] = int(str(val))
+                else:
+                    result[var_name] = float(str(val).rstrip("?"))
+            except (ValueError, TypeError):
+                pass
+        return result
 
     @staticmethod
     def _generate_random_test(

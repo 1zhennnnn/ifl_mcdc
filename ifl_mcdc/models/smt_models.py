@@ -58,3 +58,4 @@ class SMTResult:
     bound_specs: list[BoundSpec] | None
     core: list[str] | None
     solve_time: float = field(default=0.0)
+    complement_model: dict[str, object] | None = field(default=None)

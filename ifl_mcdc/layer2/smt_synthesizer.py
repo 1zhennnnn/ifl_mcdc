@@ -183,7 +183,34 @@ class SMTConstraintSynthesizer:
             concrete: dict[str, object] = {
                 str(v): model[v] for v in model
             }
-            return SMTResult(True, concrete, bound_specs, None, solve_time)
+
+            # 求解互補測試（D=False，目標條件=False，非目標變數固定）
+            target_cond_comp = next(
+                c for c in decision_node.condition_set.conditions
+                if c.cond_id == gap.condition_id
+            )
+            target_z3_comp = ASTToZ3Converter(z3_vars).convert_cond(target_cond_comp)
+            target_var_names = set(target_cond_comp.var_names)
+
+            s_comp = Solver()
+            s_comp.set("timeout", 2000)
+            s_comp.add(f_expr == BoolVal(False))
+            s_comp.add(target_z3_comp == BoolVal(False))
+            for var_name, z3_var in z3_vars.items():
+                if var_name not in target_var_names:
+                    model_val = model[z3_var]
+                    if model_val is not None:
+                        s_comp.add(z3_var == model_val)  # type: ignore[arg-type]
+
+            comp_concrete: dict[str, object] | None = None
+            try:
+                if s_comp.check() == sat:
+                    comp_model = s_comp.model()
+                    comp_concrete = {str(v): comp_model[v] for v in comp_model}
+            except z3.Z3Exception:
+                pass
+
+            return SMTResult(True, concrete, bound_specs, None, solve_time, comp_concrete)
         else:
             # UNSAT：取 unsat core
             s2 = Solver()
@@ -225,13 +252,6 @@ class SMTConstraintSynthesizer:
         f_expr: object,
         domain_types: dict[str, str],
     ) -> list[object]:
-        """建構 Φ_gap 約束列表。
-
-        (A) 決策節點輸出為 True
-        (B) 目標條件翻轉所需的具體值
-        (C) 耦合夥伴固定值（消除遮罩）
-        (D) int 型變數 >= 0（避免負數）
-        """
         phi: list[object] = []
         converter = ASTToZ3Converter(z3_vars)
 
@@ -240,23 +260,35 @@ class SMTConstraintSynthesizer:
             if c.cond_id == gap.condition_id
         )
 
-        # (A) 決策必須為 True
+        # (A) 決策結果為 True（找一個有效的覆蓋案例）
         phi.append(f_expr == BoolVal(True))
 
-        # (B) 目標條件的方向
+        # (B) 目標條件的有效值
+        # F2T：目標條件為 True（這個案例中目標條件成立）
+        # T2F：目標條件為 False（需要另一個案例，此處找 True 的配對）
+        # 實際上我們只需要找「目標條件為 True 且決策為 True」的案例
+        # 配對案例（目標條件 False）由 coverage_engine 從既有案例配對
         target_z3 = converter.convert_cond(target_cond)
         if gap.flip_direction == "F2T":
+            # 找目標條件為 True 的案例
             phi.append(target_z3 == BoolVal(True))
         else:
-            phi.append(target_z3 == BoolVal(False))
+            # T2F：找目標條件為 True 的案例（作為配對的 True 端）
+            phi.append(target_z3 == BoolVal(True))
 
-        # (C) 耦合夥伴固定值（消除遮罩）
+        # (C) 耦合夥伴約束：只對不共用變數的夥伴施加約束
+        target_vars = set(target_cond.var_names)
         for other, coupling_type in dn.condition_set.get_coupled(gap.condition_id):
+            # 若夥伴與目標共用變數，跳過（避免矛盾）
+            if set(other.var_names) & target_vars:
+                continue
             other_z3 = converter.convert_cond(other)
-            fix_val = BoolVal(False) if coupling_type == "OR" else BoolVal(True)
-            phi.append(other_z3 == fix_val)
+            if coupling_type == "OR":
+                phi.append(other_z3 == BoolVal(False))
+            else:
+                phi.append(other_z3 == BoolVal(True))
 
-        # (D) int 型變數 >= 0
+        # (D) int 變數 >= 0
         for var_name, z3_var in z3_vars.items():
             if domain_types.get(var_name, "int") == "int":
                 phi.append(z3_var >= 0)  # type: ignore[operator]
