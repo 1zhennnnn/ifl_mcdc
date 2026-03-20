@@ -105,15 +105,16 @@ class LLMSampler:
     """呼叫 LLM 後端，重試解析，驗證輸出，記錄 token 消耗。"""
 
     MAX_RETRIES: int = 3
-    RETRY_DELAY: float = 2.0
 
     def __init__(
         self,
         backend: LLMBackend,
         validator: DomainValidator,
+        retry_delay: float = 2.0,
     ) -> None:
         self.backend = backend
         self.validator = validator
+        self.retry_delay = retry_delay
         self.token_log: list[dict[str, object]] = []
 
     def sample(self, prompt: str) -> tuple[dict[str, object], ValidationResult]:
@@ -134,7 +135,7 @@ class LLMSampler:
         for attempt in range(1, self.MAX_RETRIES + 1):
             # 第 2 次起：退避等待
             if attempt > 1:
-                time.sleep(self.RETRY_DELAY * (attempt - 1))
+                time.sleep(self.retry_delay * (attempt - 1))
                 current_prompt = self._build_retry_prompt(prompt, last_error)
 
             t_start = time.time()

@@ -31,13 +31,13 @@ from ifl_mcdc.models.probe_record import ProbeLog
 class IFLResult:
     """IFL 主迴圈的執行結果。"""
 
-    converged: bool               # True = 100% MC/DC 達成
-    final_coverage: float         # 0.0 ~ 1.0
+    converged: bool                       # True = 傳統覆蓋率 100%（compute_loss == 0）
+    final_coverage: float                 # 傳統覆蓋率（已覆蓋 / 2k）
     test_suite: list[dict[str, object]]   # 所有已接受的測試案例
     iteration_count: int
-    total_tokens: int             # LLM API 消耗的估算 token 數
-    infeasible_paths: list[str]   # 被標記為不可行的缺口條件 ID
-    loss_history: list[int]       # 每次成功迭代後的 L(X) 值
+    total_tokens: int                     # LLM API 消耗的估算 token 數
+    infeasible_paths: list[str]           # 被 Z3 標記為不可行的條件 ID
+    loss_history: list[int]               # 每次迭代後的損失值（2k - covered）
 
 
 class IFLOrchestrator:
@@ -55,7 +55,7 @@ class IFLOrchestrator:
         self.smt = SMTConstraintSynthesizer()
         self.prompt = PromptConstructor()
         actual_backend = backend if backend is not None else config.llm_backend
-        self.sampler = LLMSampler(actual_backend, config.domain_validator)
+        self.sampler = LLMSampler(actual_backend, config.domain_validator, config.llm_retry_delay)
         self.gate = AcceptanceGate(self.engine)
         self._infeasible: set[str] = set()
 
@@ -101,7 +101,7 @@ class IFLOrchestrator:
         for _ in range(3):
             test_case = self._generate_random_test(dn, self.config.domain_types)
             test_id = self._run_test(instrumented_module, test_case, log)
-            test_suite.append({**test_case, "__test_id": test_id})
+            test_suite.append({**test_case, "__test_id": test_id, "__source": "random"})
 
         # ── 步驟 4：建立初始矩陣 ──
         matrix = self.engine.build_matrix(dn.condition_set, log)
@@ -109,6 +109,7 @@ class IFLOrchestrator:
 
         # ── 步驟 5：IFL 迭代迴圈 ──
         iteration = 0
+
         while matrix.compute_loss() > 0 and iteration < self.config.max_iterations:
             iteration += 1
 
@@ -121,9 +122,11 @@ class IFLOrchestrator:
             if gap is None:
                 break  # 所有剩餘缺口均不可行
 
-            # Z3 合成約束
+            # 步驟 2：Z3 合成約束 Φ_gap，得到可行解空間 Ω（bound_specs）
             try:
-                smt_result = self.smt.synthesize(dn, gap, self.config.domain_types)
+                smt_result = self.smt.synthesize(
+                    dn, gap, self.config.domain_types, self.config.domain_bounds
+                )
             except (Z3TimeoutError, Z3UNSATError):
                 self._infeasible.add(gap.condition_id)
                 loss_history.append(matrix.compute_loss())
@@ -134,26 +137,7 @@ class IFLOrchestrator:
                 loss_history.append(matrix.compute_loss())
                 continue
 
-            # 直接執行 SMT 主測試（D=True）並無條件加入測試套件
-            smt_case = self._z3_model_to_python(
-                smt_result.model or {}, self.config.domain_types
-            )
-            smt_test_id: str | None = None
-            if smt_case:
-                smt_test_id = self._run_test(instrumented_module, smt_case, log)
-                test_suite.append({**smt_case, "__test_id": smt_test_id})
-
-            # 直接執行 SMT 互補測試（D=False），與主測試形成保證的 MC/DC 對
-            if smt_result.complement_model:
-                comp_case = self._z3_model_to_python(
-                    smt_result.complement_model, self.config.domain_types
-                )
-                if comp_case:
-                    comp_id = self._run_test(instrumented_module, comp_case, log)
-                    self.gate.evaluate(matrix, log, comp_id)  # 更新矩陣
-                    test_suite.append({**comp_case, "__test_id": comp_id})
-
-            # 建構提示並採樣（LLM 補充多樣性）
+            # 步驟 3：將 Ω 轉化為自然語言提示（PromptConstructor）
             p_prompt = self.prompt.build(
                 dn,
                 gap,
@@ -162,19 +146,22 @@ class IFLOrchestrator:
                 self.config.domain_context,
             )
 
+            # 步驟 4：LLM 在 Ω ∩ Valid(x) 中採樣
+            # SDD §7：LLMSamplingError → 跳過此缺口本輪，下輪重試
             try:
                 new_case, _ = self.sampler.sample(p_prompt)
             except LLMSamplingError:
                 loss_history.append(matrix.compute_loss())
                 continue
 
-            # 執行新測試案例
+            # 步驟 5：AcceptanceGate 驗證 L(X) 是否下降
             test_id = self._run_test(instrumented_module, new_case, log)
-
-            # 接受門控
             accepted = self.gate.evaluate(matrix, log, test_id)
+
             if accepted:
-                test_suite.append({**new_case, "__test_id": test_id})
+                test_suite.append(
+                    {**new_case, "__test_id": test_id, "__source": "llm"}
+                )
 
             loss_history.append(matrix.compute_loss())
 
@@ -229,37 +216,13 @@ class IFLOrchestrator:
         setattr(module, "_ifl_record_decision", pi._ifl_record_decision)
 
     @staticmethod
-    def _z3_model_to_python(
-        model: dict[str, object],
-        domain_types: dict[str, str],
-    ) -> dict[str, object]:
-        """將 Z3 model 字典轉換為 Python 原生值。"""
-        import z3 as _z3
-
-        result: dict[str, object] = {}
-        for var_name, val in model.items():
-            if val is None:
-                continue
-            t = domain_types.get(var_name, "int")
-            try:
-                if t == "bool":
-                    result[var_name] = bool(_z3.is_true(val))
-                elif t == "int":
-                    result[var_name] = int(str(val))
-                else:
-                    result[var_name] = float(str(val).rstrip("?"))
-            except (ValueError, TypeError):
-                pass
-        return result
-
-    @staticmethod
     def _generate_random_test(
         dn: DecisionNode,
         domain_types: dict[str, str],
     ) -> dict[str, object]:
         """為決策節點的所有變數生成隨機值。
 
-        int → randint(0, 100)
+        int → randint(0, 130)（符合 DomainValidator 年齡規則 0～130）
         bool → choice([True, False])
         """
         test: dict[str, object] = {}
@@ -273,5 +236,5 @@ class IFLOrchestrator:
                 if var_type == "bool":
                     test[var_name] = random.choice([True, False])
                 else:
-                    test[var_name] = random.randint(0, 100)
+                    test[var_name] = random.randint(0, 130)
         return test

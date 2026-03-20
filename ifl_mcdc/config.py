@@ -29,6 +29,7 @@ class IFLConfig(BaseSettings):
     # ── IFL 迭代控制 ──
     max_iterations: int = Field(default=50)
     min_coverage: float = Field(default=1.0)
+    llm_retry_delay: float = Field(default=2.0)
 
     # ── 目標模組 ──
     func_name: str = Field(default="check_vaccine_eligibility")
@@ -44,6 +45,14 @@ class IFLConfig(BaseSettings):
             "high_risk": "bool",
             "days_since_last": "int",
             "egg_allergy": "bool",
+        }
+    )
+
+    # ── 領域數值邊界（變數名 → [min, max]）──
+    domain_bounds: dict[str, list[int]] = Field(
+        default={
+            "age": [18, 100],
+            "days_since_last": [0, 3650],
         }
     )
 

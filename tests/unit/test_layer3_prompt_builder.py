@@ -42,7 +42,7 @@ def _parse_first(expr: str):  # type: ignore[no-untyped-def]
 
 
 def test_contains_all_bound_specs():  # type: ignore[no-untyped-def]
-    """TC-U-37：每個 BoundSpec 的 to_prompt_str() 都出現在輸出提示詞中。"""
+    """TC-U-37：每個 BoundSpec 的變數名稱都出現在 §3 提示詞中。"""
     dn = _parse_first("age >= 18 and not egg_allergy")
     bound_specs = _make_bound_specs()
     gap = _make_gap(dn.condition_set.conditions[0].cond_id, "F2T")
@@ -56,9 +56,13 @@ def test_contains_all_bound_specs():  # type: ignore[no-untyped-def]
         domain_context="疫苗接種資格",
     )
 
+    assert "【臨床情境引導】" in prompt, "§3 標題應為【臨床情境引導】"
     for bs in bound_specs:
-        expected = bs.to_prompt_str()
-        assert expected in prompt, f"BoundSpec {bs.var_name} 的描述應出現在提示詞中：{expected!r}"
+        assert bs.var_name in prompt, f"BoundSpec {bs.var_name} 的變數名稱應出現在提示詞中"
+    # int 型應有 「必須在...到...之間」描述
+    assert "18" in prompt and "38" in prompt, "age 的範圍邊界應出現在提示詞中"
+    # bool 型應有具體值描述
+    assert "False" in prompt, "egg_allergy 的約束值 False 應出現在提示詞中"
 
 
 # ─────────────────────────────────────────────
@@ -95,7 +99,7 @@ def test_token_limit():  # type: ignore[no-untyped-def]
 
 
 def test_section_preservation():  # type: ignore[no-untyped-def]
-    """TC-U-39：即使截斷，§3（精確數值約束）和 §4（輸出格式）必須完整保留。"""
+    """TC-U-39：即使截斷，§3（臨床情境引導）和 §4（輸出格式）必須完整保留。"""
     dn = _parse_first("age >= 18 and not egg_allergy")
     dn.source_context = "y" * 3000  # 超長
 
@@ -112,12 +116,12 @@ def test_section_preservation():  # type: ignore[no-untyped-def]
     )
 
     # §3 標題必須存在
-    assert "【精確數值約束】" in prompt, "§3 標題必須保留"
+    assert "【臨床情境引導】" in prompt, "§3 標題必須保留"
     # §4 標題必須存在
     assert "【輸出格式】" in prompt, "§4 標題必須保留"
-    # 每個 BoundSpec 必須完整
+    # 每個 BoundSpec 的變數名稱必須存在
     for bs in bound_specs:
-        assert bs.to_prompt_str() in prompt, f"{bs.var_name} 的約束必須完整保留"
+        assert bs.var_name in prompt, f"{bs.var_name} 的變數名稱必須出現在截斷後的提示詞中"
 
 
 # ─────────────────────────────────────────────

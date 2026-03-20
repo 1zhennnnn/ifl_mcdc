@@ -3,7 +3,7 @@
 
 TC-U-41: 拒絕負數年齡
 TC-U-42: 拒絕超過 130 的年齡
-TC-U-43: 邊界值 0 和 130 通過
+TC-U-43: 邊界值 0 和 130 通過（SRS FR-10：不得拒絕合法邊界）
 TC-U-44: 拒絕負數距上次接種天數
 TC-U-45: 拒絕非布林型高風險/過敏標記
 TC-U-46: 無效 JSON 時 passed=False
@@ -14,10 +14,11 @@ import json
 
 from ifl_mcdc.models.validation import DomainRule, ValidationResult, Violation
 
+
 DEFAULT_MEDICAL_RULES: list[DomainRule] = [
     DomainRule(
         field="age",
-        description="年齡必須在 0～130 之間（整數）",
+        description="年齡必須在 0～130 之間",
         validator=lambda v: isinstance(v, int) and not isinstance(v, bool) and 0 <= v <= 130,
     ),
     DomainRule(
@@ -42,7 +43,7 @@ class DomainValidator:
     """驗證 LLM 生成的測試案例是否符合醫療領域規則。"""
 
     def __init__(self, rules: list[DomainRule] | None = None) -> None:
-        self.rules = rules or DEFAULT_MEDICAL_RULES
+        self.rules = rules if rules is not None else DEFAULT_MEDICAL_RULES
 
     def validate(self, test_case_json: str) -> ValidationResult:
         """驗證 JSON 字串形式的測試案例。

@@ -131,6 +131,7 @@ class SMTConstraintSynthesizer:
         decision_node: DecisionNode,
         gap: GapEntry,
         domain_types: dict[str, str],
+        domain_bounds: dict[str, list[int]] | None = None,
     ) -> SMTResult:
         """主方法：合成 Φ_gap 並求解。
 
@@ -138,6 +139,7 @@ class SMTConstraintSynthesizer:
             decision_node: 決策節點。
             gap: 待填補的缺口（condition_id + flip_direction）。
             domain_types: var_name → "int" | "bool" | "float" 的映射。
+            domain_bounds: var_name → [min, max]，用於約束 Z3 整數變數範圍。
 
         Returns:
             SMTResult：SAT 含 model，UNSAT 含 core。
@@ -154,7 +156,7 @@ class SMTConstraintSynthesizer:
         f_expr = ASTToZ3Converter(z3_vars).convert(decision_node)
 
         # 步驟 3：建構 Φ_gap
-        phi_gap = self._build_phi_gap(decision_node, gap, z3_vars, f_expr, domain_types)
+        phi_gap = self._build_phi_gap(decision_node, gap, z3_vars, f_expr, domain_types, domain_bounds)
 
         # 步驟 4：求解
         s = Solver()
@@ -179,9 +181,11 @@ class SMTConstraintSynthesizer:
         if result == sat:
             model = s.model()
             from ifl_mcdc.layer2.bound_extractor import BoundExtractor
-            bound_specs = BoundExtractor().extract(model, z3_vars, domain_types)
+            bound_specs = BoundExtractor().extract(model, z3_vars, domain_types, domain_bounds)
+            # model_completion=True で domain bounds 制約済み変数も具体値を取得
             concrete: dict[str, object] = {
-                str(v): model[v] for v in model
+                var_name: model.eval(z3_var, model_completion=True)
+                for var_name, z3_var in z3_vars.items()
             }
 
             # 求解互補測試（D=False，目標條件=False，非目標變數固定）
@@ -196,17 +200,23 @@ class SMTConstraintSynthesizer:
             s_comp.set("timeout", 2000)
             s_comp.add(f_expr == BoolVal(False))
             s_comp.add(target_z3_comp == BoolVal(False))
+            # 非目標變數：固定為主解（域約束由主解已保證）
+            # 目標變數：不加域約束，允許超出邊界以實現條件翻轉
             for var_name, z3_var in z3_vars.items():
                 if var_name not in target_var_names:
                     model_val = model[z3_var]
                     if model_val is not None:
-                        s_comp.add(z3_var == model_val)  # type: ignore[arg-type]
+                        s_comp.add(z3_var == model_val)
 
             comp_concrete: dict[str, object] | None = None
             try:
                 if s_comp.check() == sat:
                     comp_model = s_comp.model()
-                    comp_concrete = {str(v): comp_model[v] for v in comp_model}
+                    # model_completion=True 確保被 equality 約束的變數也回傳具體值
+                    comp_concrete = {
+                        var_name: comp_model.eval(z3_var, model_completion=True)
+                        for var_name, z3_var in z3_vars.items()
+                    }
             except z3.Z3Exception:
                 pass
 
@@ -251,6 +261,7 @@ class SMTConstraintSynthesizer:
         z3_vars: dict[str, object],
         f_expr: object,
         domain_types: dict[str, str],
+        domain_bounds: dict[str, list[int]] | None = None,
     ) -> list[object]:
         phi: list[object] = []
         converter = ASTToZ3Converter(z3_vars)
@@ -288,9 +299,14 @@ class SMTConstraintSynthesizer:
             else:
                 phi.append(other_z3 == BoolVal(True))
 
-        # (D) int 變數 >= 0
+        # (D) int 變數域約束：優先使用 domain_bounds，否則僅約束 >= 0
         for var_name, z3_var in z3_vars.items():
             if domain_types.get(var_name, "int") == "int":
-                phi.append(z3_var >= 0)  # type: ignore[operator]
+                if domain_bounds and var_name in domain_bounds:
+                    lo, hi = domain_bounds[var_name][0], domain_bounds[var_name][1]
+                    phi.append(z3_var >= lo)  # type: ignore[operator]
+                    phi.append(z3_var <= hi)  # type: ignore[operator]
+                else:
+                    phi.append(z3_var >= 0)  # type: ignore[operator]
 
         return phi

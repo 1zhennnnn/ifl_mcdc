@@ -153,9 +153,9 @@ def test_exponential_backoff():  # type: ignore[no-untyped-def]
     assert result_data == good
     # 第 2 次（attempt=2）sleep RETRY_DELAY*1；第 3 次（attempt=3）sleep RETRY_DELAY*2
     assert len(sleep_calls) == 2, f"應有 2 次 sleep 呼叫，實際 {sleep_calls}"
-    assert sleep_calls[0] == LLMSampler.RETRY_DELAY * 1, (
-        f"第 2 次 sleep 應為 {LLMSampler.RETRY_DELAY}，實際 {sleep_calls[0]}"
+    assert sleep_calls[0] == sampler.retry_delay * 1, (
+        f"第 2 次 sleep 應為 {sampler.retry_delay}，實際 {sleep_calls[0]}"
     )
-    assert sleep_calls[1] == LLMSampler.RETRY_DELAY * 2, (
-        f"第 3 次 sleep 應為 {LLMSampler.RETRY_DELAY * 2}，實際 {sleep_calls[1]}"
+    assert sleep_calls[1] == sampler.retry_delay * 2, (
+        f"第 3 次 sleep 應為 {sampler.retry_delay * 2}，實際 {sleep_calls[1]}"
     )

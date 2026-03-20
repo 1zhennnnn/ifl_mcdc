@@ -4,69 +4,59 @@
     "converged_runs": 5,
     "convergence_rate": "100.0%",
     "avg_iterations": 3.4,
-    "avg_tokens": 115.0,
-    "avg_elapsed_sec": 13.7
+    "avg_tokens": 64.6,
+    "avg_elapsed_sec": 5.7,
+    "avg_valid_rate_random": 1.0,
+    "avg_valid_rate_smt": 0.85,
+    "avg_valid_rate_llm": 1.0
   },
   "runs": [
     {
       "run_id": 1,
       "converged": true,
       "final_coverage": 1.0,
-      "iteration_count": 4,
-      "total_tokens": 139,
-      "test_suite_size": 12,
+      "iteration_count": 3,
+      "total_tokens": 57,
+      "test_suite_size": 10,
       "infeasible_paths": [],
       "loss_history": [
         10,
         8,
-        4,
         2,
         0
       ],
-      "elapsed_seconds": 20.59,
-      "all_cases_valid": true,
+      "elapsed_seconds": 8.25,
+      "all_cases_valid": false,
       "test_suite": [
         {
-          "age": 37,
-          "high_risk": false,
-          "days_since_last": 70,
-          "egg_allergy": true
-        },
-        {
-          "age": 7,
+          "age": 45,
           "high_risk": true,
-          "days_since_last": 72,
+          "days_since_last": 95,
+          "egg_allergy": false
+        },
+        {
+          "age": 48,
+          "high_risk": true,
+          "days_since_last": 29,
           "egg_allergy": true
         },
         {
-          "age": 36,
+          "age": 98,
           "high_risk": false,
-          "days_since_last": 20,
+          "days_since_last": 60,
           "egg_allergy": true
         },
         {
-          "days_since_last": 181,
           "age": 65,
-          "egg_allergy": false,
-          "high_risk": false
+          "high_risk": false,
+          "days_since_last": 181,
+          "egg_allergy": false
         },
         {
           "age": 64,
+          "high_risk": false,
           "days_since_last": 181,
-          "egg_allergy": false,
-          "high_risk": false
-        },
-        {
-          "days_since_last": 181,
-          "age": 18,
-          "egg_allergy": false,
-          "high_risk": true
-        },
-        {
-          "age": 0,
-          "days_since_last": 181,
-          "egg_allergy": false,
-          "high_risk": true
+          "egg_allergy": false
         },
         {
           "age": 18,
@@ -75,89 +65,89 @@
           "egg_allergy": false
         },
         {
+          "age": 0,
+          "high_risk": true,
           "days_since_last": 181,
-          "age": 65,
-          "egg_allergy": false,
-          "high_risk": true
+          "egg_allergy": false
         },
         {
-          "days_since_last": 180,
-          "age": 65,
-          "egg_allergy": false,
-          "high_risk": true
-        },
-        {
-          "days_since_last": 181,
-          "age": 65,
-          "egg_allergy": false,
-          "high_risk": true
+          "age": 45,
+          "high_risk": true,
+          "days_since_last": 200,
+          "egg_allergy": false
         },
         {
           "age": 65,
+          "high_risk": true,
           "days_since_last": 181,
-          "egg_allergy": true,
-          "high_risk": true
+          "egg_allergy": false
+        },
+        {
+          "age": 65,
+          "high_risk": true,
+          "days_since_last": 181,
+          "egg_allergy": true
         }
-      ]
+      ],
+      "valid_rate_random": 1.0,
+      "count_random": 3,
+      "valid_rate_smt": 0.833,
+      "count_smt": 6,
+      "valid_rate_llm": 1.0,
+      "count_llm": 1
     },
     {
       "run_id": 2,
       "converged": true,
       "final_coverage": 1.0,
       "iteration_count": 3,
-      "total_tokens": 99,
-      "test_suite_size": 10,
+      "total_tokens": 57,
+      "test_suite_size": 11,
       "infeasible_paths": [],
       "loss_history": [
         10,
-        8,
+        6,
         2,
         0
       ],
-      "elapsed_seconds": 12.95,
-      "all_cases_valid": true,
+      "elapsed_seconds": 4.53,
+      "all_cases_valid": false,
       "test_suite": [
         {
-          "age": 66,
-          "high_risk": true,
-          "days_since_last": 75,
-          "egg_allergy": false
-        },
-        {
-          "age": 50,
-          "high_risk": true,
-          "days_since_last": 5,
-          "egg_allergy": false
-        },
-        {
-          "age": 15,
+          "age": 73,
           "high_risk": false,
-          "days_since_last": 43,
+          "days_since_last": 56,
           "egg_allergy": false
         },
         {
-          "days_since_last": 181,
+          "age": 36,
+          "high_risk": false,
+          "days_since_last": 30,
+          "egg_allergy": false
+        },
+        {
+          "age": 89,
+          "high_risk": false,
+          "days_since_last": 35,
+          "egg_allergy": false
+        },
+        {
           "age": 65,
-          "egg_allergy": false,
-          "high_risk": false
+          "high_risk": false,
+          "days_since_last": 181,
+          "egg_allergy": false
         },
         {
           "age": 64,
+          "high_risk": false,
           "days_since_last": 181,
-          "egg_allergy": false,
-          "high_risk": false
+          "egg_allergy": false
         },
         {
-          "days_since_last": 181,
-          "age": 18,
-          "egg_allergy": false,
-          "high_risk": true
-        },
-        {
-          "age": 0,
-          "days_since_last": 181,
-          "egg_allergy": false,
-          "high_risk": true
+          "age": 70,
+          "high_risk": false,
+          "days_since_last": 200,
+          "egg_allergy": false
         },
         {
           "age": 18,
@@ -166,104 +156,43 @@
           "egg_allergy": false
         },
         {
+          "age": 0,
+          "high_risk": true,
           "days_since_last": 181,
-          "age": 65,
-          "egg_allergy": false,
-          "high_risk": true
+          "egg_allergy": false
+        },
+        {
+          "age": 45,
+          "high_risk": true,
+          "days_since_last": 200,
+          "egg_allergy": false
         },
         {
           "age": 65,
+          "high_risk": true,
           "days_since_last": 181,
-          "egg_allergy": true,
-          "high_risk": true
+          "egg_allergy": false
+        },
+        {
+          "age": 65,
+          "high_risk": true,
+          "days_since_last": 181,
+          "egg_allergy": true
         }
-      ]
+      ],
+      "valid_rate_random": 1.0,
+      "count_random": 3,
+      "valid_rate_smt": 0.833,
+      "count_smt": 6,
+      "valid_rate_llm": 1.0,
+      "count_llm": 2
     },
     {
       "run_id": 3,
       "converged": true,
       "final_coverage": 1.0,
-      "iteration_count": 3,
-      "total_tokens": 99,
-      "test_suite_size": 10,
-      "infeasible_paths": [],
-      "loss_history": [
-        10,
-        8,
-        2,
-        0
-      ],
-      "elapsed_seconds": 10.85,
-      "all_cases_valid": true,
-      "test_suite": [
-        {
-          "age": 13,
-          "high_risk": true,
-          "days_since_last": 53,
-          "egg_allergy": false
-        },
-        {
-          "age": 59,
-          "high_risk": true,
-          "days_since_last": 10,
-          "egg_allergy": false
-        },
-        {
-          "age": 29,
-          "high_risk": true,
-          "days_since_last": 53,
-          "egg_allergy": true
-        },
-        {
-          "days_since_last": 181,
-          "age": 65,
-          "egg_allergy": false,
-          "high_risk": false
-        },
-        {
-          "age": 64,
-          "days_since_last": 181,
-          "egg_allergy": false,
-          "high_risk": false
-        },
-        {
-          "days_since_last": 181,
-          "age": 18,
-          "egg_allergy": false,
-          "high_risk": true
-        },
-        {
-          "age": 0,
-          "days_since_last": 181,
-          "egg_allergy": false,
-          "high_risk": true
-        },
-        {
-          "age": 18,
-          "high_risk": true,
-          "days_since_last": 181,
-          "egg_allergy": false
-        },
-        {
-          "days_since_last": 181,
-          "age": 65,
-          "egg_allergy": false,
-          "high_risk": true
-        },
-        {
-          "age": 65,
-          "days_since_last": 181,
-          "egg_allergy": true,
-          "high_risk": true
-        }
-      ]
-    },
-    {
-      "run_id": 4,
-      "converged": true,
-      "final_coverage": 1.0,
       "iteration_count": 4,
-      "total_tokens": 139,
+      "total_tokens": 76,
       "test_suite_size": 12,
       "infeasible_paths": [],
       "loss_history": [
@@ -273,50 +202,38 @@
         2,
         0
       ],
-      "elapsed_seconds": 14.03,
-      "all_cases_valid": true,
+      "elapsed_seconds": 6.78,
+      "all_cases_valid": false,
       "test_suite": [
         {
-          "age": 1,
+          "age": 29,
           "high_risk": false,
-          "days_since_last": 46,
-          "egg_allergy": true
-        },
-        {
-          "age": 57,
-          "high_risk": false,
-          "days_since_last": 57,
+          "days_since_last": 43,
           "egg_allergy": false
         },
         {
-          "age": 59,
+          "age": 96,
           "high_risk": true,
-          "days_since_last": 64,
+          "days_since_last": 44,
+          "egg_allergy": false
+        },
+        {
+          "age": 51,
+          "high_risk": true,
+          "days_since_last": 69,
           "egg_allergy": true
         },
         {
-          "days_since_last": 181,
           "age": 65,
-          "egg_allergy": false,
-          "high_risk": false
+          "high_risk": false,
+          "days_since_last": 181,
+          "egg_allergy": false
         },
         {
           "age": 64,
+          "high_risk": false,
           "days_since_last": 181,
-          "egg_allergy": false,
-          "high_risk": false
-        },
-        {
-          "days_since_last": 181,
-          "age": 18,
-          "egg_allergy": false,
-          "high_risk": true
-        },
-        {
-          "age": 0,
-          "days_since_last": 181,
-          "egg_allergy": false,
-          "high_risk": true
+          "egg_allergy": false
         },
         {
           "age": 18,
@@ -325,89 +242,187 @@
           "egg_allergy": false
         },
         {
+          "age": 0,
+          "high_risk": true,
           "days_since_last": 181,
-          "age": 65,
-          "egg_allergy": false,
-          "high_risk": true
+          "egg_allergy": false
         },
         {
+          "age": 45,
+          "high_risk": true,
+          "days_since_last": 200,
+          "egg_allergy": false
+        },
+        {
+          "age": 65,
+          "high_risk": true,
+          "days_since_last": 181,
+          "egg_allergy": false
+        },
+        {
+          "age": 65,
+          "high_risk": true,
           "days_since_last": 180,
-          "age": 65,
-          "egg_allergy": false,
-          "high_risk": true
-        },
-        {
-          "days_since_last": 181,
-          "age": 65,
-          "egg_allergy": false,
-          "high_risk": true
+          "egg_allergy": false
         },
         {
           "age": 65,
+          "high_risk": true,
           "days_since_last": 181,
-          "egg_allergy": true,
-          "high_risk": true
+          "egg_allergy": false
+        },
+        {
+          "age": 65,
+          "high_risk": true,
+          "days_since_last": 181,
+          "egg_allergy": true
         }
-      ]
+      ],
+      "valid_rate_random": 1.0,
+      "count_random": 3,
+      "valid_rate_smt": 0.875,
+      "count_smt": 8,
+      "valid_rate_llm": 1.0,
+      "count_llm": 1
+    },
+    {
+      "run_id": 4,
+      "converged": true,
+      "final_coverage": 1.0,
+      "iteration_count": 3,
+      "total_tokens": 57,
+      "test_suite_size": 11,
+      "infeasible_paths": [],
+      "loss_history": [
+        10,
+        6,
+        2,
+        0
+      ],
+      "elapsed_seconds": 4.28,
+      "all_cases_valid": false,
+      "test_suite": [
+        {
+          "age": 74,
+          "high_risk": false,
+          "days_since_last": 13,
+          "egg_allergy": false
+        },
+        {
+          "age": 37,
+          "high_risk": true,
+          "days_since_last": 28,
+          "egg_allergy": true
+        },
+        {
+          "age": 95,
+          "high_risk": true,
+          "days_since_last": 49,
+          "egg_allergy": false
+        },
+        {
+          "age": 65,
+          "high_risk": false,
+          "days_since_last": 181,
+          "egg_allergy": false
+        },
+        {
+          "age": 64,
+          "high_risk": false,
+          "days_since_last": 181,
+          "egg_allergy": false
+        },
+        {
+          "age": 70,
+          "high_risk": false,
+          "days_since_last": 200,
+          "egg_allergy": false
+        },
+        {
+          "age": 18,
+          "high_risk": true,
+          "days_since_last": 181,
+          "egg_allergy": false
+        },
+        {
+          "age": 0,
+          "high_risk": true,
+          "days_since_last": 181,
+          "egg_allergy": false
+        },
+        {
+          "age": 45,
+          "high_risk": true,
+          "days_since_last": 200,
+          "egg_allergy": false
+        },
+        {
+          "age": 65,
+          "high_risk": true,
+          "days_since_last": 181,
+          "egg_allergy": false
+        },
+        {
+          "age": 65,
+          "high_risk": true,
+          "days_since_last": 181,
+          "egg_allergy": true
+        }
+      ],
+      "valid_rate_random": 1.0,
+      "count_random": 3,
+      "valid_rate_smt": 0.833,
+      "count_smt": 6,
+      "valid_rate_llm": 1.0,
+      "count_llm": 2
     },
     {
       "run_id": 5,
       "converged": true,
       "final_coverage": 1.0,
-      "iteration_count": 3,
-      "total_tokens": 99,
-      "test_suite_size": 10,
+      "iteration_count": 4,
+      "total_tokens": 76,
+      "test_suite_size": 12,
       "infeasible_paths": [],
       "loss_history": [
         10,
         8,
+        4,
         2,
         0
       ],
-      "elapsed_seconds": 10.25,
-      "all_cases_valid": true,
+      "elapsed_seconds": 4.77,
+      "all_cases_valid": false,
       "test_suite": [
         {
-          "age": 55,
-          "high_risk": true,
-          "days_since_last": 1,
+          "age": 61,
+          "high_risk": false,
+          "days_since_last": 15,
           "egg_allergy": false
         },
         {
-          "age": 40,
-          "high_risk": true,
-          "days_since_last": 89,
+          "age": 87,
+          "high_risk": false,
+          "days_since_last": 100,
           "egg_allergy": true
         },
         {
-          "age": 60,
+          "age": 32,
+          "high_risk": true,
+          "days_since_last": 56,
+          "egg_allergy": true
+        },
+        {
+          "age": 65,
           "high_risk": false,
-          "days_since_last": 63,
+          "days_since_last": 181,
           "egg_allergy": false
         },
         {
-          "days_since_last": 181,
-          "age": 65,
-          "egg_allergy": false,
-          "high_risk": false
-        },
-        {
           "age": 64,
+          "high_risk": false,
           "days_since_last": 181,
-          "egg_allergy": false,
-          "high_risk": false
-        },
-        {
-          "days_since_last": 181,
-          "age": 18,
-          "egg_allergy": false,
-          "high_risk": true
-        },
-        {
-          "age": 0,
-          "days_since_last": 181,
-          "egg_allergy": false,
-          "high_risk": true
+          "egg_allergy": false
         },
         {
           "age": 18,
@@ -416,18 +431,48 @@
           "egg_allergy": false
         },
         {
+          "age": 0,
+          "high_risk": true,
           "days_since_last": 181,
-          "age": 65,
-          "egg_allergy": false,
-          "high_risk": true
+          "egg_allergy": false
+        },
+        {
+          "age": 45,
+          "high_risk": true,
+          "days_since_last": 200,
+          "egg_allergy": false
         },
         {
           "age": 65,
+          "high_risk": true,
           "days_since_last": 181,
-          "egg_allergy": true,
-          "high_risk": true
+          "egg_allergy": false
+        },
+        {
+          "age": 65,
+          "high_risk": true,
+          "days_since_last": 180,
+          "egg_allergy": false
+        },
+        {
+          "age": 65,
+          "high_risk": true,
+          "days_since_last": 181,
+          "egg_allergy": false
+        },
+        {
+          "age": 65,
+          "high_risk": true,
+          "days_since_last": 181,
+          "egg_allergy": true
         }
-      ]
+      ],
+      "valid_rate_random": 1.0,
+      "count_random": 3,
+      "valid_rate_smt": 0.875,
+      "count_smt": 8,
+      "valid_rate_llm": 1.0,
+      "count_llm": 1
     }
   ]
 }

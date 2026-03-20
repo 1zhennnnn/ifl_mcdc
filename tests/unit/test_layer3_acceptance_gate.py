@@ -1,8 +1,8 @@
 """
 Layer 3 AcceptanceGate 單元測試。
 
-TC-U-52: L(X) 降低時接受（回傳 True）
-TC-U-53: L(X) 不變時拒絕（回傳 False）
+TC-U-71: L(X) 降低時接受（回傳 True）
+TC-U-72: L(X) 不變時拒絕（回傳 False）
 """
 from __future__ import annotations
 
@@ -25,12 +25,12 @@ def _make_log_and_matrix():  # type: ignore[no-untyped-def]
 
 
 # ─────────────────────────────────────────────
-# TC-U-52：L(X) 降低時接受
+# TC-U-71：L(X) 降低時接受
 # ─────────────────────────────────────────────
 
 
 def test_accept_when_loss_decreases():  # type: ignore[no-untyped-def]
-    """TC-U-52：新測試案例提供有效獨立對 → L(X) 降低 → evaluate 回傳 True。
+    """TC-U-71：新測試案例提供有效獨立對 → L(X) 降低 → evaluate 回傳 True。
 
     設計：
       c1=F, c2=F, c3=T, c4=T → 決策 False（F）
@@ -67,12 +67,12 @@ def test_accept_when_loss_decreases():  # type: ignore[no-untyped-def]
 
 
 # ─────────────────────────────────────────────
-# TC-U-53：L(X) 不變時拒絕
+# TC-U-72：L(X) 不變時拒絕
 # ─────────────────────────────────────────────
 
 
 def test_reject_when_loss_unchanged():  # type: ignore[no-untyped-def]
-    """TC-U-53：新測試案例不構成任何獨立對 → L(X) 不變 → evaluate 回傳 False。
+    """TC-U-72：新測試案例不構成任何獨立對 → L(X) 不變 → evaluate 回傳 False。
 
     設計：
       T1 和 T2 的 c1 都相同（都是 False），不構成任何翻轉對。

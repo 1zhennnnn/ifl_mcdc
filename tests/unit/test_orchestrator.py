@@ -1,11 +1,12 @@
 """
 IFLOrchestrator 單元測試（使用 MockLLMBackend）。
 
-TC-U-52: run() 回傳 IFLResult，結構完整
+TC-U-52: run() 回傳 IFLResult，結構完整（7 個欄位）
 TC-U-53: 空決策節點來源 → ValueError
 TC-U-54: INFEASIBLE 路徑不再重複求解
 TC-U-55: 預算耗盡時輸出部分覆蓋報告
 TC-U-56: 損失歷程記錄單調不增
+TC-U-63: Z3 全部 UNSAT → infeasible 路徑偵測，loop 提前終止
 """
 from __future__ import annotations
 
@@ -47,7 +48,7 @@ def _make_orch(
 
 
 def test_run_returns_ifl_result():  # type: ignore[no-untyped-def]
-    """TC-U-52：run() 回傳 IFLResult，所有欄位型別正確。"""
+    """TC-U-52：run() 回傳 IFLResult，所有欄位型別正確（SDD 7 欄位）。"""
     responses = [_VALID_JSON] * 30
     orch = _make_orch(responses, max_iterations=5)
 
@@ -156,4 +157,45 @@ def test_loss_history_non_increasing():  # type: ignore[no-untyped-def]
         assert history[i] <= history[i - 1], (
             f"loss_history[{i}]={history[i]} > loss_history[{i-1}]={history[i-1]}："
             f"損失不應增加。history={history}"
+        )
+
+
+# ─────────────────────────────────────────────
+# TC-U-63：Z3 全部 UNSAT → infeasible 路徑偵測
+# ─────────────────────────────────────────────
+
+
+def test_infeasible_detection_via_z3_unsat():  # type: ignore[no-untyped-def]
+    """TC-U-63：強制 Z3 synthesize 全部拋出 Z3UNSATError，驗證 infeasible 路徑偵測機制。
+
+    預期：
+    - infeasible_paths 非空（所有條件均被 Z3 標記為不可行）
+    - converged=False（傳統覆蓋率未達 100%，分母為 2k）
+    - final_coverage < 1.0（隨機初始案例不足以完全覆蓋）
+    - loss_history 單調不增
+    """
+    from ifl_mcdc.exceptions import Z3UNSATError
+
+    orch = _make_orch([])
+
+    # 強制 SMT synthesize 全部失敗 → 觸發 infeasible 偵測路徑
+    with patch.object(orch.smt, "synthesize", side_effect=Z3UNSATError("強制 UNSAT")):
+        result = orch.run(VACCINE_PATH)
+
+    # infeasible 路徑應被偵測到
+    assert len(result.infeasible_paths) > 0, (
+        f"應有不可行路徑，但 infeasible_paths={result.infeasible_paths}"
+    )
+
+    # 傳統覆蓋率（只有 3 個隨機案例）不應達到 100%
+    assert result.converged is False, (
+        f"Z3 全部 UNSAT 時不應收斂，actual final_coverage={result.final_coverage:.1%}"
+    )
+    assert result.final_coverage < 1.0
+
+    # loss_history 應單調不增
+    history = result.loss_history
+    for i in range(1, len(history)):
+        assert history[i] <= history[i - 1], (
+            f"loss_history 非單調不增：{history}"
         )

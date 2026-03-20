@@ -1,0 +1,816 @@
+{
+  "results": [
+    {
+      "fixture": "k5_vaccine",
+      "mode": "random",
+      "n_runs": 3,
+      "converged_runs": 0,
+      "convergence_rate": 0.0,
+      "avg_coverage": 0,
+      "avg_iterations": 0,
+      "avg_elapsed": 0,
+      "avg_tokens": 0,
+      "runs": [
+        {
+          "name": "k5_vaccine",
+          "mode": "random",
+          "converged": false,
+          "final_coverage": 0.0,
+          "iteration_count": 0,
+          "total_tokens": 0,
+          "elapsed_seconds": 0.0,
+          "loss_history": [
+            10
+          ],
+          "infeasible_paths": []
+        },
+        {
+          "name": "k5_vaccine",
+          "mode": "random",
+          "converged": false,
+          "final_coverage": 0.0,
+          "iteration_count": 0,
+          "total_tokens": 0,
+          "elapsed_seconds": 0.01,
+          "loss_history": [
+            10
+          ],
+          "infeasible_paths": []
+        },
+        {
+          "name": "k5_vaccine",
+          "mode": "random",
+          "converged": false,
+          "final_coverage": 0.0,
+          "iteration_count": 0,
+          "total_tokens": 0,
+          "elapsed_seconds": 0.0,
+          "loss_history": [
+            10
+          ],
+          "infeasible_paths": []
+        }
+      ]
+    },
+    {
+      "fixture": "k5_vaccine",
+      "mode": "smt_only",
+      "n_runs": 3,
+      "converged_runs": 3,
+      "convergence_rate": 1.0,
+      "avg_coverage": 1.0,
+      "avg_iterations": 5.0,
+      "avg_elapsed": 30.143333333333334,
+      "avg_tokens": 0.0,
+      "runs": [
+        {
+          "name": "k5_vaccine",
+          "mode": "smt_only",
+          "converged": true,
+          "final_coverage": 1.0,
+          "iteration_count": 5,
+          "total_tokens": 0,
+          "elapsed_seconds": 30.11,
+          "loss_history": [
+            10,
+            8,
+            6,
+            4,
+            2,
+            0
+          ],
+          "infeasible_paths": []
+        },
+        {
+          "name": "k5_vaccine",
+          "mode": "smt_only",
+          "converged": true,
+          "final_coverage": 1.0,
+          "iteration_count": 5,
+          "total_tokens": 0,
+          "elapsed_seconds": 30.15,
+          "loss_history": [
+            10,
+            8,
+            6,
+            4,
+            2,
+            0
+          ],
+          "infeasible_paths": []
+        },
+        {
+          "name": "k5_vaccine",
+          "mode": "smt_only",
+          "converged": true,
+          "final_coverage": 1.0,
+          "iteration_count": 5,
+          "total_tokens": 0,
+          "elapsed_seconds": 30.17,
+          "loss_history": [
+            10,
+            8,
+            6,
+            4,
+            2,
+            0
+          ],
+          "infeasible_paths": []
+        }
+      ]
+    },
+    {
+      "fixture": "k5_vaccine",
+      "mode": "full",
+      "n_runs": 3,
+      "converged_runs": 3,
+      "convergence_rate": 1.0,
+      "avg_coverage": 1.0,
+      "avg_iterations": 3.6666666666666665,
+      "avg_elapsed": 14.466666666666669,
+      "avg_tokens": 118.66666666666667,
+      "runs": [
+        {
+          "name": "k5_vaccine",
+          "mode": "full",
+          "converged": true,
+          "final_coverage": 1.0,
+          "iteration_count": 4,
+          "total_tokens": 118,
+          "elapsed_seconds": 15.49,
+          "loss_history": [
+            10,
+            8,
+            4,
+            2,
+            0
+          ],
+          "infeasible_paths": []
+        },
+        {
+          "name": "k5_vaccine",
+          "mode": "full",
+          "converged": true,
+          "final_coverage": 1.0,
+          "iteration_count": 4,
+          "total_tokens": 139,
+          "elapsed_seconds": 16.17,
+          "loss_history": [
+            10,
+            8,
+            4,
+            2,
+            0
+          ],
+          "infeasible_paths": []
+        },
+        {
+          "name": "k5_vaccine",
+          "mode": "full",
+          "converged": true,
+          "final_coverage": 1.0,
+          "iteration_count": 3,
+          "total_tokens": 99,
+          "elapsed_seconds": 11.74,
+          "loss_history": [
+            10,
+            6,
+            2,
+            0
+          ],
+          "infeasible_paths": []
+        }
+      ]
+    },
+    {
+      "fixture": "k8_drug",
+      "mode": "random",
+      "n_runs": 3,
+      "converged_runs": 0,
+      "convergence_rate": 0.0,
+      "avg_coverage": 0,
+      "avg_iterations": 0,
+      "avg_elapsed": 0,
+      "avg_tokens": 0,
+      "runs": [
+        {
+          "name": "k8_drug",
+          "mode": "random",
+          "converged": false,
+          "final_coverage": 0.0,
+          "iteration_count": 0,
+          "total_tokens": 0,
+          "elapsed_seconds": 0.03,
+          "loss_history": [
+            16
+          ],
+          "infeasible_paths": []
+        },
+        {
+          "name": "k8_drug",
+          "mode": "random",
+          "converged": false,
+          "final_coverage": 0.0,
+          "iteration_count": 0,
+          "total_tokens": 0,
+          "elapsed_seconds": 0.01,
+          "loss_history": [
+            16
+          ],
+          "infeasible_paths": []
+        },
+        {
+          "name": "k8_drug",
+          "mode": "random",
+          "converged": false,
+          "final_coverage": 0.0,
+          "iteration_count": 0,
+          "total_tokens": 0,
+          "elapsed_seconds": 0.02,
+          "loss_history": [
+            16
+          ],
+          "infeasible_paths": []
+        }
+      ]
+    },
+    {
+      "fixture": "k8_drug",
+      "mode": "smt_only",
+      "n_runs": 3,
+      "converged_runs": 3,
+      "convergence_rate": 1.0,
+      "avg_coverage": 1.0,
+      "avg_iterations": 8.0,
+      "avg_elapsed": 48.23666666666666,
+      "avg_tokens": 0.0,
+      "runs": [
+        {
+          "name": "k8_drug",
+          "mode": "smt_only",
+          "converged": true,
+          "final_coverage": 1.0,
+          "iteration_count": 8,
+          "total_tokens": 0,
+          "elapsed_seconds": 48.22,
+          "loss_history": [
+            16,
+            14,
+            12,
+            10,
+            8,
+            6,
+            4,
+            2,
+            0
+          ],
+          "infeasible_paths": []
+        },
+        {
+          "name": "k8_drug",
+          "mode": "smt_only",
+          "converged": true,
+          "final_coverage": 1.0,
+          "iteration_count": 8,
+          "total_tokens": 0,
+          "elapsed_seconds": 48.26,
+          "loss_history": [
+            16,
+            14,
+            12,
+            10,
+            8,
+            6,
+            4,
+            2,
+            0
+          ],
+          "infeasible_paths": []
+        },
+        {
+          "name": "k8_drug",
+          "mode": "smt_only",
+          "converged": true,
+          "final_coverage": 1.0,
+          "iteration_count": 8,
+          "total_tokens": 0,
+          "elapsed_seconds": 48.23,
+          "loss_history": [
+            16,
+            14,
+            12,
+            10,
+            8,
+            6,
+            4,
+            2,
+            0
+          ],
+          "infeasible_paths": []
+        }
+      ]
+    },
+    {
+      "fixture": "k8_drug",
+      "mode": "full",
+      "n_runs": 3,
+      "converged_runs": 3,
+      "convergence_rate": 1.0,
+      "avg_coverage": 1.0,
+      "avg_iterations": 8.0,
+      "avg_elapsed": 48.10333333333333,
+      "avg_tokens": 781.0,
+      "runs": [
+        {
+          "name": "k8_drug",
+          "mode": "full",
+          "converged": true,
+          "final_coverage": 1.0,
+          "iteration_count": 8,
+          "total_tokens": 794,
+          "elapsed_seconds": 43.97,
+          "loss_history": [
+            16,
+            14,
+            12,
+            10,
+            8,
+            6,
+            4,
+            2,
+            0
+          ],
+          "infeasible_paths": []
+        },
+        {
+          "name": "k8_drug",
+          "mode": "full",
+          "converged": true,
+          "final_coverage": 1.0,
+          "iteration_count": 8,
+          "total_tokens": 690,
+          "elapsed_seconds": 46.18,
+          "loss_history": [
+            16,
+            14,
+            12,
+            10,
+            8,
+            6,
+            4,
+            2,
+            0
+          ],
+          "infeasible_paths": []
+        },
+        {
+          "name": "k8_drug",
+          "mode": "full",
+          "converged": true,
+          "final_coverage": 1.0,
+          "iteration_count": 8,
+          "total_tokens": 859,
+          "elapsed_seconds": 54.16,
+          "loss_history": [
+            16,
+            14,
+            12,
+            10,
+            8,
+            6,
+            4,
+            2,
+            0
+          ],
+          "infeasible_paths": []
+        }
+      ]
+    },
+    {
+      "fixture": "k9_surgery",
+      "mode": "random",
+      "n_runs": 3,
+      "converged_runs": 0,
+      "convergence_rate": 0.0,
+      "avg_coverage": 0,
+      "avg_iterations": 0,
+      "avg_elapsed": 0,
+      "avg_tokens": 0,
+      "runs": [
+        {
+          "name": "k9_surgery",
+          "mode": "random",
+          "converged": false,
+          "final_coverage": 0.0,
+          "iteration_count": 0,
+          "total_tokens": 0,
+          "elapsed_seconds": 0.01,
+          "loss_history": [
+            18
+          ],
+          "infeasible_paths": []
+        },
+        {
+          "name": "k9_surgery",
+          "mode": "random",
+          "converged": false,
+          "final_coverage": 0.0,
+          "iteration_count": 0,
+          "total_tokens": 0,
+          "elapsed_seconds": 0.01,
+          "loss_history": [
+            18
+          ],
+          "infeasible_paths": []
+        },
+        {
+          "name": "k9_surgery",
+          "mode": "random",
+          "converged": false,
+          "final_coverage": 0.0,
+          "iteration_count": 0,
+          "total_tokens": 0,
+          "elapsed_seconds": 0.0,
+          "loss_history": [
+            18
+          ],
+          "infeasible_paths": []
+        }
+      ]
+    },
+    {
+      "fixture": "k9_surgery",
+      "mode": "smt_only",
+      "n_runs": 3,
+      "converged_runs": 3,
+      "convergence_rate": 1.0,
+      "avg_coverage": 1.0,
+      "avg_iterations": 9.0,
+      "avg_elapsed": 54.330000000000005,
+      "avg_tokens": 0.0,
+      "runs": [
+        {
+          "name": "k9_surgery",
+          "mode": "smt_only",
+          "converged": true,
+          "final_coverage": 1.0,
+          "iteration_count": 9,
+          "total_tokens": 0,
+          "elapsed_seconds": 54.36,
+          "loss_history": [
+            18,
+            16,
+            14,
+            12,
+            10,
+            8,
+            6,
+            4,
+            2,
+            0
+          ],
+          "infeasible_paths": []
+        },
+        {
+          "name": "k9_surgery",
+          "mode": "smt_only",
+          "converged": true,
+          "final_coverage": 1.0,
+          "iteration_count": 9,
+          "total_tokens": 0,
+          "elapsed_seconds": 54.31,
+          "loss_history": [
+            18,
+            16,
+            14,
+            12,
+            10,
+            8,
+            6,
+            4,
+            2,
+            0
+          ],
+          "infeasible_paths": []
+        },
+        {
+          "name": "k9_surgery",
+          "mode": "smt_only",
+          "converged": true,
+          "final_coverage": 1.0,
+          "iteration_count": 9,
+          "total_tokens": 0,
+          "elapsed_seconds": 54.32,
+          "loss_history": [
+            18,
+            16,
+            14,
+            12,
+            10,
+            8,
+            6,
+            4,
+            2,
+            0
+          ],
+          "infeasible_paths": []
+        }
+      ]
+    },
+    {
+      "fixture": "k9_surgery",
+      "mode": "full",
+      "n_runs": 3,
+      "converged_runs": 3,
+      "convergence_rate": 1.0,
+      "avg_coverage": 1.0,
+      "avg_iterations": 9.0,
+      "avg_elapsed": 61.05666666666667,
+      "avg_tokens": 827.6666666666666,
+      "runs": [
+        {
+          "name": "k9_surgery",
+          "mode": "full",
+          "converged": true,
+          "final_coverage": 1.0,
+          "iteration_count": 9,
+          "total_tokens": 761,
+          "elapsed_seconds": 54.34,
+          "loss_history": [
+            18,
+            16,
+            14,
+            12,
+            10,
+            8,
+            6,
+            4,
+            2,
+            0
+          ],
+          "infeasible_paths": []
+        },
+        {
+          "name": "k9_surgery",
+          "mode": "full",
+          "converged": true,
+          "final_coverage": 1.0,
+          "iteration_count": 9,
+          "total_tokens": 861,
+          "elapsed_seconds": 64.94,
+          "loss_history": [
+            18,
+            16,
+            14,
+            12,
+            10,
+            8,
+            6,
+            4,
+            2,
+            0
+          ],
+          "infeasible_paths": []
+        },
+        {
+          "name": "k9_surgery",
+          "mode": "full",
+          "converged": true,
+          "final_coverage": 1.0,
+          "iteration_count": 9,
+          "total_tokens": 861,
+          "elapsed_seconds": 63.89,
+          "loss_history": [
+            18,
+            16,
+            14,
+            12,
+            10,
+            8,
+            6,
+            4,
+            2,
+            0
+          ],
+          "infeasible_paths": []
+        }
+      ]
+    },
+    {
+      "fixture": "k10_icu",
+      "mode": "random",
+      "n_runs": 3,
+      "converged_runs": 0,
+      "convergence_rate": 0.0,
+      "avg_coverage": 0,
+      "avg_iterations": 0,
+      "avg_elapsed": 0,
+      "avg_tokens": 0,
+      "runs": [
+        {
+          "name": "k10_icu",
+          "mode": "random",
+          "converged": false,
+          "final_coverage": 0.0,
+          "iteration_count": 0,
+          "total_tokens": 0,
+          "elapsed_seconds": 0.01,
+          "loss_history": [
+            20
+          ],
+          "infeasible_paths": []
+        },
+        {
+          "name": "k10_icu",
+          "mode": "random",
+          "converged": false,
+          "final_coverage": 0.0,
+          "iteration_count": 0,
+          "total_tokens": 0,
+          "elapsed_seconds": 0.01,
+          "loss_history": [
+            20
+          ],
+          "infeasible_paths": []
+        },
+        {
+          "name": "k10_icu",
+          "mode": "random",
+          "converged": false,
+          "final_coverage": 0.0,
+          "iteration_count": 0,
+          "total_tokens": 0,
+          "elapsed_seconds": 0.01,
+          "loss_history": [
+            20
+          ],
+          "infeasible_paths": []
+        }
+      ]
+    },
+    {
+      "fixture": "k10_icu",
+      "mode": "smt_only",
+      "n_runs": 3,
+      "converged_runs": 3,
+      "convergence_rate": 1.0,
+      "avg_coverage": 1.0,
+      "avg_iterations": 10.0,
+      "avg_elapsed": 60.31,
+      "avg_tokens": 0.0,
+      "runs": [
+        {
+          "name": "k10_icu",
+          "mode": "smt_only",
+          "converged": true,
+          "final_coverage": 1.0,
+          "iteration_count": 10,
+          "total_tokens": 0,
+          "elapsed_seconds": 60.3,
+          "loss_history": [
+            20,
+            18,
+            16,
+            14,
+            12,
+            10,
+            8,
+            6,
+            4,
+            2,
+            0
+          ],
+          "infeasible_paths": []
+        },
+        {
+          "name": "k10_icu",
+          "mode": "smt_only",
+          "converged": true,
+          "final_coverage": 1.0,
+          "iteration_count": 10,
+          "total_tokens": 0,
+          "elapsed_seconds": 60.32,
+          "loss_history": [
+            20,
+            18,
+            16,
+            14,
+            12,
+            10,
+            8,
+            6,
+            4,
+            2,
+            0
+          ],
+          "infeasible_paths": []
+        },
+        {
+          "name": "k10_icu",
+          "mode": "smt_only",
+          "converged": true,
+          "final_coverage": 1.0,
+          "iteration_count": 10,
+          "total_tokens": 0,
+          "elapsed_seconds": 60.31,
+          "loss_history": [
+            20,
+            18,
+            16,
+            14,
+            12,
+            10,
+            8,
+            6,
+            4,
+            2,
+            0
+          ],
+          "infeasible_paths": []
+        }
+      ]
+    },
+    {
+      "fixture": "k10_icu",
+      "mode": "full",
+      "n_runs": 3,
+      "converged_runs": 3,
+      "convergence_rate": 1.0,
+      "avg_coverage": 1.0,
+      "avg_iterations": 10.0,
+      "avg_elapsed": 70.45333333333333,
+      "avg_tokens": 978.3333333333334,
+      "runs": [
+        {
+          "name": "k10_icu",
+          "mode": "full",
+          "converged": true,
+          "final_coverage": 1.0,
+          "iteration_count": 10,
+          "total_tokens": 1021,
+          "elapsed_seconds": 73.88,
+          "loss_history": [
+            20,
+            18,
+            16,
+            14,
+            12,
+            10,
+            8,
+            6,
+            4,
+            2,
+            0
+          ],
+          "infeasible_paths": []
+        },
+        {
+          "name": "k10_icu",
+          "mode": "full",
+          "converged": true,
+          "final_coverage": 1.0,
+          "iteration_count": 10,
+          "total_tokens": 1010,
+          "elapsed_seconds": 75.97,
+          "loss_history": [
+            20,
+            18,
+            16,
+            14,
+            12,
+            10,
+            8,
+            6,
+            4,
+            2,
+            0
+          ],
+          "infeasible_paths": []
+        },
+        {
+          "name": "k10_icu",
+          "mode": "full",
+          "converged": true,
+          "final_coverage": 1.0,
+          "iteration_count": 10,
+          "total_tokens": 904,
+          "elapsed_seconds": 61.51,
+          "loss_history": [
+            20,
+            18,
+            16,
+            14,
+            12,
+            10,
+            8,
+            6,
+            4,
+            2,
+            0
+          ],
+          "infeasible_paths": []
+        }
+      ]
+    }
+  ]
+}

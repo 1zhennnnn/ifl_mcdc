@@ -2,8 +2,8 @@
 Layer 3 DomainValidator 單元測試。
 
 TC-U-41: 拒絕負數年齡
-TC-U-42: 拒絕超過 130 的年齡
-TC-U-43: 邊界值 0 和 130 通過
+TC-U-42: 拒絕超過 130 的年齡（SDD 5.2.2：age 上限 130）
+TC-U-43: 邊界值 0 和 130 通過（SRS FR-10：不得拒絕合法邊界）
 TC-U-44: 拒絕負數距上次接種天數
 TC-U-45: 拒絕非布林型高風險/過敏標記
 TC-U-46: 無效 JSON 時 passed=False
@@ -44,7 +44,7 @@ def test_reject_negative_age():  # type: ignore[no-untyped-def]
 
 
 def test_reject_over_age():  # type: ignore[no-untyped-def]
-    """TC-U-42：age=131 應被拒絕。"""
+    """TC-U-42：age=131 應被拒絕（SDD 5.2.2：age 上限為 130）。"""
     validator = _make_validator()
     result = validator.validate(_json(age=131, egg_allergy=False))
 
@@ -54,12 +54,12 @@ def test_reject_over_age():  # type: ignore[no-untyped-def]
 
 
 # ─────────────────────────────────────────────
-# TC-U-43：邊界值 0 和 130 通過
+# TC-U-43：邊界值 0 和 130 通過（SRS FR-10）
 # ─────────────────────────────────────────────
 
 
 def test_accept_boundary_age_0():  # type: ignore[no-untyped-def]
-    """TC-U-43：age=0 應通過驗證。"""
+    """TC-U-43：age=0 應通過驗證（SRS FR-10：不得拒絕合法邊界）。"""
     validator = _make_validator()
     result = validator.validate(_json(age=0, egg_allergy=False))
 
@@ -68,7 +68,7 @@ def test_accept_boundary_age_0():  # type: ignore[no-untyped-def]
 
 
 def test_accept_boundary_age_130():  # type: ignore[no-untyped-def]
-    """TC-U-43：age=130 應通過驗證。"""
+    """TC-U-43：age=130 應通過驗證（SRS FR-10：不得拒絕合法邊界）。"""
     validator = _make_validator()
     result = validator.validate(_json(age=130, egg_allergy=False))
 
@@ -89,6 +89,15 @@ def test_reject_negative_days():  # type: ignore[no-untyped-def]
     assert result.passed is False
     fields = [v.field for v in result.violations]
     assert "days_since_last" in fields
+
+
+def test_accept_large_days():  # type: ignore[no-untyped-def]
+    """TC-U-44：days_since_last=5000 應通過驗證（SDD：無上限）。"""
+    validator = _make_validator()
+    result = validator.validate(_json(age=30, days_since_last=5000, egg_allergy=False))
+
+    days_violations = [v for v in result.violations if v.field == "days_since_last"]
+    assert len(days_violations) == 0, f"days_since_last=5000 不應有違規：{days_violations}"
 
 
 # ─────────────────────────────────────────────

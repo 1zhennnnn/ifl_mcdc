@@ -25,6 +25,7 @@ class BoundExtractor:
         z3_model: z3.ModelRef,
         z3_vars: dict[str, object],
         domain_types: dict[str, str],
+        domain_bounds: dict[str, list[int]] | None = None,
     ) -> list[BoundSpec]:
         """從 Z3 model 萃取 BoundSpec 列表。
 
@@ -32,6 +33,8 @@ class BoundExtractor:
             z3_model: Z3 SAT model（s.model()）。
             z3_vars: var_name → Z3 變數的映射。
             domain_types: var_name → "int" | "bool" | "float" 的映射。
+            domain_bounds: var_name → [min, max]。若有設定，int 型使用此範圍
+                           而非 model_val±10。
 
         Returns:
             每個變數一個 BoundSpec 的列表。
@@ -77,11 +80,16 @@ class BoundExtractor:
                         int_val = int(str(model_val))
                     except (ValueError, TypeError):
                         int_val = 0
+                    if domain_bounds and var_name in domain_bounds:
+                        lo, hi = domain_bounds[var_name][0], domain_bounds[var_name][1]
+                        interval: tuple[float, float] = (float(lo), float(hi))
+                    else:
+                        interval = (float(int_val - 10), float(int_val + 10))
                     specs.append(
                         BoundSpec(
                             var_name=var_name,
                             var_type="int",
-                            interval=(float(int_val - 10), float(int_val + 10)),
+                            interval=interval,
                             valid_set=None,
                         )
                     )

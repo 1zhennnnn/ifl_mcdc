@@ -55,11 +55,40 @@ class PromptConstructor:
 
         direction_str = "True" if gap.flip_direction == "F2T" else "False"
 
-        # §3 固定部分
-        sec3_lines = [
-            "【精確數值約束】（必須嚴格遵守，不可自行修改）",
-        ] + [bs.to_prompt_str() for bs in bound_specs]
-        sec3 = "\n".join(sec3_lines)
+        # §3 固定部分（語意引導版）
+        lines: list[str] = ["【臨床情境引導】", "請根據以下邏輯約束，生成一個符合真實醫療情境的測試案例：", ""]
+        for bs in bound_specs:
+            if bs.interval is not None:
+                lo, hi = bs.interval
+                lo_str = str(int(lo)) if lo == int(lo) else str(lo)
+                hi_str = str(int(hi)) if hi == int(hi) else str(hi)
+                unit = f"（單位：{bs.medical_unit}）" if bs.medical_unit else ""
+                lines.append(
+                    f"- {bs.var_name}：必須在 {lo_str} 到 {hi_str} 之間{unit}，"
+                    "請選擇一個臨床上合理的具體數值"
+                )
+            elif bs.valid_set is not None:
+                vals = sorted(bs.valid_set, key=str)
+                if len(vals) == 1:
+                    lines.append(f"- {bs.var_name}：必須為 {vals[0]}")
+                else:
+                    lines.append(f"- {bs.var_name}：必須為 {vals} 之一")
+        lines += [
+            "",
+            "【語意要求】",
+            f"請想像一個真實的{domain_context}場景，確保：",
+            "1. 數值符合真實臨床範圍（例如年齡不應為 0 或極端值）",
+            "2. 各參數之間有合理的臨床關聯性",
+            "3. 整體案例代表一個真實可能存在的病患情境",
+            "",
+            "【臨床語意要求】",
+            "生成的測試案例必須符合真實醫療情境：",
+            "- 年齡請選擇臨床上常見的患者年齡（建議 18~85 歲之間）",
+            "- 各參數之間應有合理的臨床關聯性",
+            "- 避免使用極端值（如 age=0, age=130, days=9999）",
+            "- 想像這是一位真實存在的病患",
+        ]
+        sec3 = "\n".join(lines)
 
         # §4 固定部分
         example_json = json.dumps(

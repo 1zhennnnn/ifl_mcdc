@@ -1,0 +1,1035 @@
+{
+  "overall_valid_rate": 90.0,
+  "gaps": [
+    {
+      "gap": "D1.c1_F2T",
+      "valid_count": 10,
+      "total": 10,
+      "valid_rate": 100.0,
+      "samples": [
+        {
+          "case": {
+            "age": 68,
+            "high_risk": false,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 68,
+            "high_risk": false,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 70,
+            "high_risk": false,
+            "days_since_last": 180,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 66,
+            "high_risk": false,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 70,
+            "high_risk": false,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 66,
+            "high_risk": false,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 70,
+            "high_risk": false,
+            "days_since_last": 180,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 66,
+            "high_risk": false,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 66,
+            "high_risk": false,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 68,
+            "high_risk": false,
+            "days_since_last": 180,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        }
+      ]
+    },
+    {
+      "gap": "D1.c1_T2F",
+      "valid_count": 10,
+      "total": 10,
+      "valid_rate": 100.0,
+      "samples": [
+        {
+          "case": {
+            "age": 64,
+            "high_risk": false,
+            "days_since_last": 180,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 64,
+            "high_risk": false,
+            "days_since_last": 180,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 64,
+            "high_risk": false,
+            "days_since_last": 180,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 64,
+            "high_risk": false,
+            "days_since_last": 180,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 64,
+            "high_risk": false,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 64,
+            "high_risk": false,
+            "days_since_last": 180,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 64,
+            "high_risk": false,
+            "days_since_last": 180,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 64,
+            "high_risk": false,
+            "days_since_last": 180,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 64,
+            "high_risk": false,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 64,
+            "high_risk": false,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        }
+      ]
+    },
+    {
+      "gap": "D1.c2_F2T",
+      "valid_count": 10,
+      "total": 10,
+      "valid_rate": 100.0,
+      "samples": [
+        {
+          "case": {
+            "age": 25,
+            "high_risk": true,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 20,
+            "high_risk": true,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 22,
+            "high_risk": true,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 20,
+            "high_risk": true,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 25,
+            "high_risk": true,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 20,
+            "high_risk": true,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 25,
+            "high_risk": true,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 25,
+            "high_risk": true,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 20,
+            "high_risk": true,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 20,
+            "high_risk": true,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        }
+      ]
+    },
+    {
+      "gap": "D1.c2_T2F",
+      "valid_count": 0,
+      "total": 10,
+      "valid_rate": 0.0,
+      "samples": [
+        {
+          "case": null,
+          "valid": false,
+          "error": "LLM 採樣失敗，已重試 3 次。最後錯誤：欄位 [age]：age 必須在 18～100 之間，實際值：17"
+        },
+        {
+          "case": null,
+          "valid": false,
+          "error": "LLM 採樣失敗，已重試 3 次。最後錯誤：欄位 [age]：age 必須在 18～100 之間，實際值：17"
+        },
+        {
+          "case": null,
+          "valid": false,
+          "error": "LLM 採樣失敗，已重試 3 次。最後錯誤：欄位 [age]：age 必須在 18～100 之間，實際值：17"
+        },
+        {
+          "case": null,
+          "valid": false,
+          "error": "LLM 採樣失敗，已重試 3 次。最後錯誤：欄位 [age]：age 必須在 18～100 之間，實際值：17"
+        },
+        {
+          "case": null,
+          "valid": false,
+          "error": "LLM 採樣失敗，已重試 3 次。最後錯誤：欄位 [age]：age 必須在 18～100 之間，實際值：17"
+        },
+        {
+          "case": null,
+          "valid": false,
+          "error": "LLM 採樣失敗，已重試 3 次。最後錯誤：欄位 [age]：age 必須在 18～100 之間，實際值：17"
+        },
+        {
+          "case": null,
+          "valid": false,
+          "error": "LLM 採樣失敗，已重試 3 次。最後錯誤：欄位 [age]：age 必須在 18～100 之間，實際值：17"
+        },
+        {
+          "case": null,
+          "valid": false,
+          "error": "LLM 採樣失敗，已重試 3 次。最後錯誤：欄位 [age]：age 必須在 18～100 之間，實際值：17"
+        },
+        {
+          "case": null,
+          "valid": false,
+          "error": "LLM 採樣失敗，已重試 3 次。最後錯誤：欄位 [age]：age 必須在 18～100 之間，實際值：17"
+        },
+        {
+          "case": null,
+          "valid": false,
+          "error": "LLM 採樣失敗，已重試 3 次。最後錯誤：欄位 [age]：age 必須在 18～100 之間，實際值：17"
+        }
+      ]
+    },
+    {
+      "gap": "D1.c3_F2T",
+      "valid_count": 10,
+      "total": 10,
+      "valid_rate": 100.0,
+      "samples": [
+        {
+          "case": {
+            "age": 22,
+            "high_risk": true,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 22,
+            "high_risk": true,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 20,
+            "high_risk": true,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 25,
+            "high_risk": true,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 20,
+            "high_risk": true,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 25,
+            "high_risk": true,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 22,
+            "high_risk": true,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 25,
+            "high_risk": true,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 25,
+            "high_risk": true,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 20,
+            "high_risk": true,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        }
+      ]
+    },
+    {
+      "gap": "D1.c3_T2F",
+      "valid_count": 10,
+      "total": 10,
+      "valid_rate": 100.0,
+      "samples": [
+        {
+          "case": {
+            "age": 25,
+            "high_risk": true,
+            "days_since_last": 180,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 25,
+            "high_risk": true,
+            "days_since_last": 180,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 25,
+            "high_risk": true,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 25,
+            "high_risk": true,
+            "days_since_last": 180,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 25,
+            "high_risk": true,
+            "days_since_last": 180,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 25,
+            "high_risk": true,
+            "days_since_last": 180,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 20,
+            "high_risk": true,
+            "days_since_last": 180,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 20,
+            "high_risk": true,
+            "days_since_last": 180,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 20,
+            "high_risk": true,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 25,
+            "high_risk": true,
+            "days_since_last": 180,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        }
+      ]
+    },
+    {
+      "gap": "D1.c4_F2T",
+      "valid_count": 10,
+      "total": 10,
+      "valid_rate": 100.0,
+      "samples": [
+        {
+          "case": {
+            "age": 68,
+            "high_risk": true,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 70,
+            "high_risk": true,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 68,
+            "high_risk": true,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 70,
+            "high_risk": true,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 70,
+            "high_risk": true,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 68,
+            "high_risk": true,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 68,
+            "high_risk": true,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 70,
+            "high_risk": true,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 68,
+            "high_risk": true,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 68,
+            "high_risk": true,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        }
+      ]
+    },
+    {
+      "gap": "D1.c4_T2F",
+      "valid_count": 10,
+      "total": 10,
+      "valid_rate": 100.0,
+      "samples": [
+        {
+          "case": {
+            "age": 70,
+            "high_risk": true,
+            "days_since_last": 175,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 70,
+            "high_risk": true,
+            "days_since_last": 175,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 68,
+            "high_risk": true,
+            "days_since_last": 175,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 70,
+            "high_risk": true,
+            "days_since_last": 175,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 70,
+            "high_risk": true,
+            "days_since_last": 175,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 70,
+            "high_risk": true,
+            "days_since_last": 175,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 60,
+            "high_risk": true,
+            "days_since_last": 175,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 68,
+            "high_risk": true,
+            "days_since_last": 175,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 68,
+            "high_risk": true,
+            "days_since_last": 175,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 70,
+            "high_risk": true,
+            "days_since_last": 175,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        }
+      ]
+    },
+    {
+      "gap": "D1.c5_F2T",
+      "valid_count": 10,
+      "total": 10,
+      "valid_rate": 100.0,
+      "samples": [
+        {
+          "case": {
+            "age": 68,
+            "high_risk": true,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 68,
+            "high_risk": true,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 70,
+            "high_risk": true,
+            "days_since_last": 180,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 68,
+            "high_risk": true,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 68,
+            "high_risk": true,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 70,
+            "high_risk": true,
+            "days_since_last": 180,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 68,
+            "high_risk": true,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 68,
+            "high_risk": true,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 68,
+            "high_risk": true,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 68,
+            "high_risk": true,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        }
+      ]
+    },
+    {
+      "gap": "D1.c5_T2F",
+      "valid_count": 10,
+      "total": 10,
+      "valid_rate": 100.0,
+      "samples": [
+        {
+          "case": {
+            "age": 70,
+            "high_risk": true,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 68,
+            "high_risk": true,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 68,
+            "high_risk": true,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 70,
+            "high_risk": true,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 68,
+            "high_risk": true,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 68,
+            "high_risk": true,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 68,
+            "high_risk": true,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 68,
+            "high_risk": true,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 68,
+            "high_risk": true,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        },
+        {
+          "case": {
+            "age": 68,
+            "high_risk": true,
+            "days_since_last": 185,
+            "egg_allergy": false
+          },
+          "valid": true,
+          "violations": []
+        }
+      ]
+    }
+  ]
+}

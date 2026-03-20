@@ -35,11 +35,17 @@ def run_once(run_id: int) -> dict:
     elapsed = time.time() - start
 
     validator = DomainValidator()
+    from collections import defaultdict
+    source_stats: dict = defaultdict(lambda: {"total": 0, "valid": 0})
     all_valid = True
     for tc in result.test_suite:
+        source = tc.get("__source", "unknown")
         clean = {k: v for k, v in tc.items() if not k.startswith("__")}
         vr = validator.validate(json.dumps(clean))
-        if not vr.passed:
+        source_stats[source]["total"] += 1
+        if vr.passed:
+            source_stats[source]["valid"] += 1
+        else:
             all_valid = False
 
     data = {
@@ -58,6 +64,12 @@ def run_once(run_id: int) -> dict:
             for tc in result.test_suite
         ],
     }
+    for source, stats in source_stats.items():
+        total = stats["total"]
+        valid = stats["valid"]
+        rate = valid / total if total > 0 else 0.0
+        data[f"valid_rate_{source}"] = round(rate, 3)
+        data[f"count_{source}"] = total
 
     print(f"  收斂：       {result.converged}")
     print(f"  最終覆蓋率： {result.final_coverage:.1%}")
@@ -90,13 +102,20 @@ def main() -> None:
     avg_tokens = sum(r["total_tokens"]    for r in successful) / len(successful) if successful else 0
     avg_time   = sum(r["elapsed_seconds"] for r in successful) / len(successful) if successful else 0
 
+    def _avg_rate(key: str) -> float:
+        vals = [r[key] for r in successful if key in r]
+        return sum(vals) / len(vals) if vals else 0.0
+
     summary = {
-        "total_runs":       N_RUNS,
-        "converged_runs":   len(successful),
-        "convergence_rate": f"{len(successful)/N_RUNS:.1%}",
-        "avg_iterations":   round(avg_iter, 1),
-        "avg_tokens":       round(avg_tokens, 1),
-        "avg_elapsed_sec":  round(avg_time, 1),
+        "total_runs":            N_RUNS,
+        "converged_runs":        len(successful),
+        "convergence_rate":      f"{len(successful)/N_RUNS:.1%}",
+        "avg_iterations":        round(avg_iter, 1),
+        "avg_tokens":            round(avg_tokens, 1),
+        "avg_elapsed_sec":       round(avg_time, 1),
+        "avg_valid_rate_random": round(_avg_rate("valid_rate_random"), 3),
+        "avg_valid_rate_smt":    round(_avg_rate("valid_rate_smt"), 3),
+        "avg_valid_rate_llm":    round(_avg_rate("valid_rate_llm"), 3),
     }
 
     report = {"summary": summary, "runs": results}
@@ -109,10 +128,13 @@ def main() -> None:
     print(f"\n{'='*60}")
     print("  實驗完成！摘要")
     print(f"{'='*60}")
-    print(f"  收斂率：     {summary['convergence_rate']}")
-    print(f"  平均迭代數： {summary['avg_iterations']}")
-    print(f"  平均 Token： {summary['avg_tokens']}")
-    print(f"  平均時間：   {summary['avg_elapsed_sec']}s")
+    print(f"  收斂率：          {summary['convergence_rate']}")
+    print(f"  平均迭代數：      {summary['avg_iterations']}")
+    print(f"  平均 Token：      {summary['avg_tokens']}")
+    print(f"  平均時間：        {summary['avg_elapsed_sec']}s")
+    print(f"  隨機案例有效率：  {summary.get('avg_valid_rate_random', 0):.1%}")
+    print(f"  SMT 案例有效率：  {summary.get('avg_valid_rate_smt', 0):.1%}")
+    print(f"  LLM 案例有效率：  {summary.get('avg_valid_rate_llm', 0):.1%}")
     print(f"\n  報告已儲存至：{REPORT_PATH}")
     print(f"{'='*60}\n")
 
