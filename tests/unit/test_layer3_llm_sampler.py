@@ -1,14 +1,14 @@
 """
 Layer 3 LLMSampler 單元測試。
 
-LLMSampler 單一職責：網路層 + JSON 解析。
-領域驗證已移至 IFLOrchestrator，不在此層測試。
+LLMSampler 依 SDD 5.2 節：網路層 + JSON 解析 + DomainValidator 驗證。
 
 TC-U-47: 第一次成功回傳
 TC-U-48: 解析 markdown 包裝的 JSON
 TC-U-49: 第一次回傳壞 JSON → 第二次成功
 TC-U-50: 全部重試失敗 → LLMSamplingError
 TC-U-51: token_log 記錄每次嘗試 / 指數退避
+TC-U-73: DomainValidator 驗證失敗 → 重試，第二次通過
 """
 from __future__ import annotations
 
@@ -19,13 +19,15 @@ from unittest.mock import patch
 import pytest
 
 from ifl_mcdc.exceptions import LLMSamplingError
+from ifl_mcdc.layer3.domain_validator import DEFAULT_MEDICAL_RULES, DomainValidator
 from ifl_mcdc.layer3.llm_sampler import LLMSampler, MockLLMBackend
 
 
 def _sampler(responses: list[str | BaseException]) -> LLMSampler:
-    """建立採樣器（不含驗證器，驗證由 Orchestrator 負責）。"""
+    """建立採樣器（含預設醫療規則 DomainValidator）。"""
     backend = MockLLMBackend(responses)
-    return LLMSampler(backend=backend)
+    validator = DomainValidator(DEFAULT_MEDICAL_RULES)
+    return LLMSampler(backend=backend, validator=validator)
 
 
 # ─────────────────────────────────────────────
@@ -35,12 +37,13 @@ def _sampler(responses: list[str | BaseException]) -> LLMSampler:
 
 def test_success_first_try():  # type: ignore[no-untyped-def]
     """TC-U-47：第一次回傳合法 JSON → 直接成功，不重試。"""
-    payload = {"age": 30, "egg_allergy": False}
+    payload = {"age": 30, "high_risk": True, "days_since_last": 200, "egg_allergy": False}
     sampler = _sampler([json.dumps(payload)])
 
-    result_data = sampler.sample("test prompt")
+    result_data, vr = sampler.sample("test prompt")
 
     assert result_data == payload
+    assert vr.passed
     assert len(sampler.token_log) == 1, "只應有 1 次嘗試記錄"
 
 
@@ -51,11 +54,11 @@ def test_success_first_try():  # type: ignore[no-untyped-def]
 
 def test_parse_markdown_wrapped():  # type: ignore[no-untyped-def]
     """TC-U-48：LLM 回傳 ```json {...} ``` 包裝時應正確解析。"""
-    payload = {"age": 25, "high_risk": True}
+    payload = {"age": 25, "high_risk": True, "days_since_last": 200, "egg_allergy": False}
     raw = f"```json\n{json.dumps(payload)}\n```"
     sampler = _sampler([raw])
 
-    result_data = sampler.sample("test prompt")
+    result_data, _ = sampler.sample("test prompt")
 
     assert result_data == payload
 
@@ -67,12 +70,12 @@ def test_parse_markdown_wrapped():  # type: ignore[no-untyped-def]
 
 def test_retry_on_bad_json():  # type: ignore[no-untyped-def]
     """TC-U-49：第一次回傳壞 JSON，第二次成功。"""
-    good = {"age": 50}
+    good = {"age": 50, "high_risk": True, "days_since_last": 200, "egg_allergy": False}
     sampler = _sampler(["not json at all", json.dumps(good)])
 
     # 攔截 time.sleep，避免測試等待
     with patch("ifl_mcdc.layer3.llm_sampler.time.sleep"):
-        result_data = sampler.sample("test prompt")
+        result_data, _ = sampler.sample("test prompt")
 
     assert result_data == good
     assert len(sampler.token_log) == 2, "應有 2 次嘗試記錄"
@@ -103,7 +106,7 @@ def test_all_retries_fail():  # type: ignore[no-untyped-def]
 
 def test_token_log_records_attempts():  # type: ignore[no-untyped-def]
     """TC-U-51：token_log 應記錄 attempt、elapsed、est_tokens 三個欄位。"""
-    payload = {"age": 40}
+    payload = {"age": 40, "high_risk": True, "days_since_last": 200, "egg_allergy": False}
     sampler = _sampler([json.dumps(payload)])
     sampler.sample("test prompt")
 
@@ -122,7 +125,7 @@ def test_token_log_records_attempts():  # type: ignore[no-untyped-def]
 
 def test_exponential_backoff():  # type: ignore[no-untyped-def]
     """TC-U-51：第 2 次 sleep(RETRY_DELAY*1)，第 3 次 sleep(RETRY_DELAY*2)。"""
-    good = {"age": 30}
+    good = {"age": 30, "high_risk": True, "days_since_last": 200, "egg_allergy": False}
     # 第 1 次壞、第 2 次壞、第 3 次好
     sampler = _sampler(["bad", "bad", json.dumps(good)])
 
@@ -131,7 +134,7 @@ def test_exponential_backoff():  # type: ignore[no-untyped-def]
         "ifl_mcdc.layer3.llm_sampler.time.sleep",
         side_effect=lambda s: sleep_calls.append(s),
     ):
-        result_data = sampler.sample("test prompt")
+        result_data, _ = sampler.sample("test prompt")
 
     assert result_data == good
     # 第 2 次（attempt=2）sleep RETRY_DELAY*1；第 3 次（attempt=3）sleep RETRY_DELAY*2
@@ -142,3 +145,32 @@ def test_exponential_backoff():  # type: ignore[no-untyped-def]
     assert sleep_calls[1] == sampler.retry_delay * 2, (
         f"第 3 次 sleep 應為 {sampler.retry_delay * 2}，實際 {sleep_calls[1]}"
     )
+
+
+# ─────────────────────────────────────────────
+# TC-U-73：DomainValidator 驗證失敗 → 重試
+# ─────────────────────────────────────────────
+
+
+def test_domain_validation_retry():  # type: ignore[no-untyped-def]
+    """TC-U-73：第 1 次回傳不合法案例（age=-5），第 2 次回傳合法案例。
+
+    驗證：
+    - LLMSampler 在 DomainValidator 失敗後重試
+    - 第 2 次通過驗證，回傳合法 (dict, ValidationResult)
+    - 不合法案例不觸發 LLMSamplingError
+    """
+    bad = json.dumps(
+        {"age": -5, "high_risk": True, "days_since_last": 200, "egg_allergy": False}
+    )
+    good = json.dumps(
+        {"age": 30, "high_risk": True, "days_since_last": 200, "egg_allergy": False}
+    )
+    sampler = _sampler([bad, good])
+
+    with patch("ifl_mcdc.layer3.llm_sampler.time.sleep"):
+        result_data, vr = sampler.sample("test prompt")
+
+    assert vr.passed, "回傳的 ValidationResult 應已通過驗證"
+    assert result_data["age"] == 30, f"應回傳合法案例（age=30），實際 {result_data['age']}"
+    assert len(sampler.token_log) == 2, "應有 2 次嘗試記錄（第 1 次失敗，第 2 次成功）"

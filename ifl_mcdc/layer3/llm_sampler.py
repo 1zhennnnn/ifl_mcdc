@@ -1,14 +1,15 @@
 """
-LLM 採樣器：呼叫 LLM 後端、解析 JSON、重試（僅針對 JSON 解析失敗）。
+LLM 採樣器：呼叫 LLM 後端、解析 JSON、執行 DomainValidator 驗證、重試。
 
-單一職責：網路層 + JSON 解析。
-領域驗證由 IFLOrchestrator 在迭代迴圈中統一負責。
+依 SDD 5.2 節規格：LLMSampler 負責網路層、JSON 解析與領域驗證，
+最多重試 MAX_RETRIES 次，回傳 (parsed_dict, ValidationResult)。
 
 TC-U-47: 第一次成功回傳
 TC-U-48: 解析 markdown 包裝的 JSON
 TC-U-49: 第一次回傳壞 JSON → 第二次成功
 TC-U-50: 全部重試失敗 → LLMSamplingError
 TC-U-51: token_log 記錄每次嘗試 / 指數退避
+TC-U-73: DomainValidator 驗證失敗 → 重試
 """
 from __future__ import annotations
 
@@ -18,6 +19,10 @@ import time
 from abc import ABC, abstractmethod
 
 from ifl_mcdc.exceptions import LLMSamplingError
+from ifl_mcdc.models.validation import ValidationResult
+
+# DomainValidator 在此層引入，實現 SDD 5.2 節規格（sample 內部驗證）
+from ifl_mcdc.layer3.domain_validator import DomainValidator
 
 
 # ─────────────────────────────────────────────
@@ -103,10 +108,10 @@ class MockLLMBackend(LLMBackend):
 
 
 class LLMSampler:
-    """呼叫 LLM 後端，重試解析 JSON，記錄 token 消耗。
+    """呼叫 LLM 後端，重試解析 JSON 與領域驗證，記錄 token 消耗。
 
-    單一職責：僅負責網路層與 JSON 解析。
-    領域驗證由 IFLOrchestrator 在迭代迴圈中統一負責。
+    依 SDD 5.2 節：負責網路層、JSON 解析與 DomainValidator 驗證。
+    最多重試 MAX_RETRIES 次（涵蓋 JSON 解析失敗與領域驗證失敗）。
     """
 
     MAX_RETRIES: int = 3
@@ -114,26 +119,27 @@ class LLMSampler:
     def __init__(
         self,
         backend: LLMBackend,
+        validator: DomainValidator,
         retry_delay: float = 2.0,
     ) -> None:
         self.backend = backend
+        self.validator = validator
         self.retry_delay = retry_delay
         self.token_log: list[dict[str, object]] = []
 
-    def sample(self, prompt: str) -> dict[str, object]:
-        """最多重試 MAX_RETRIES 次，回傳第一個成功解析的 JSON dict。
+    def sample(self, prompt: str) -> tuple[dict[str, object], ValidationResult]:
+        """最多重試 MAX_RETRIES 次，回傳第一個通過 DomainValidator 的 (dict, ValidationResult)。
 
-        僅針對 JSON 解析失敗進行重試（網路錯誤同樣重試）。
-        領域語意驗證不在此層，由 IFLOrchestrator 負責。
+        重試觸發條件：JSON 解析失敗、網路錯誤、領域驗證失敗。
 
         Args:
             prompt: Gap-Guided Prompt。
 
         Returns:
-            解析成功的 dict。
+            (parsed_dict, validation_result)。
 
         Raises:
-            LLMSamplingError: 全部重試失敗（JSON 解析或網路錯誤）。
+            LLMSamplingError: 全部重試失敗（JSON 解析、網路或驗證錯誤）。
         """
         current_prompt = prompt
         last_error: str = ""
@@ -174,7 +180,12 @@ class LLMSampler:
                 last_error = f"JSON 解析失敗：{parse_error}"
                 continue
 
-            return data
+            val_result = self.validator.validate(json.dumps(data))
+            if not val_result.passed:
+                last_error = f"領域驗證失敗：{val_result.to_corrective_prompt()}"
+                continue
+
+            return data, val_result
 
         raise LLMSamplingError(
             f"LLM 採樣失敗，已重試 {self.MAX_RETRIES} 次。最後錯誤：{last_error}"

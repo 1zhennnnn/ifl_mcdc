@@ -60,7 +60,7 @@ def test_vaccine_c2_f2t_sat():  # type: ignore[no-untyped-def]
 
     assert result.satisfiable is True, "應可求解（SAT）"
     assert result.model is not None
-    # age >= 18 必須為 True 且 age < 65（OR 夥伴被固定為 False）
+    # age>=18=True（target）AND decision=True — 不再施加 OR 夥伴耦合約束
     assert result.bound_specs is not None
     age_spec = next(
         (s for s in result.bound_specs if s.var_name == "age"), None
@@ -68,14 +68,12 @@ def test_vaccine_c2_f2t_sat():  # type: ignore[no-untyped-def]
     assert age_spec is not None, "bound_specs 應包含 age"
     assert age_spec.interval is not None, "age 應有 interval"
     lo, hi = age_spec.interval
-    assert lo < hi, "interval 應為合法區間"
-    # BoundExtractor: interval = (model_val-10, model_val+10) → midpoint = model_val（精確）
-    # SMT 約束：age>=18=True（target）且 age>=65=False（OR 夥伴固定為 False）
-    # 故 Z3 model_val 必須在 [18, 64]
+    assert lo < hi, "interval 應為合法區間（lo < hi）"
+    # Z3 model 中 age >= 18（目標條件=True），故 midpoint >= 8（val-10 = lo）
     model_age = (lo + hi) / 2
-    assert 18 <= model_age < 65, (
-        f"Z3 model age={model_age:.0f} 應在 [18, 64]"
-        f"（target age>=18=True，OR 夥伴 age>=65=False），實際 interval=({lo}, {hi})"
+    assert model_age >= 8, (
+        f"Z3 model age={model_age:.0f} 應 >= 8（age>=18=True，interval midpoint=val），"
+        f"實際 interval=({lo}, {hi})"
     )
 
 
@@ -212,7 +210,7 @@ def test_chained_comparison():  # type: ignore[no-untyped-def]
 
 
 def test_bound_extractor_int():  # type: ignore[no-untyped-def]
-    """TC-U-34：BoundExtractor 對整數型變數萃取 interval=(val-10, val+10)。"""
+    """TC-U-34：BoundExtractor 對整數型變數萃取 interval=(val, val+10)。"""
     x = z3.Int("x")
     s = z3.Solver()
     s.add(x == 42)
@@ -226,7 +224,7 @@ def test_bound_extractor_int():  # type: ignore[no-untyped-def]
     spec = specs[0]
     assert spec.var_name == "x"
     assert spec.var_type == "int"
-    assert spec.interval == (32.0, 52.0), f"期望 (32.0, 52.0)，實際 {spec.interval}"
+    assert spec.interval == (42.0, 52.0), f"期望 (42.0, 52.0)，實際 {spec.interval}"
     assert spec.valid_set is None
 
 
@@ -289,3 +287,139 @@ def test_bound_spec_nonempty_interval():  # type: ignore[no-untyped-def]
     assert spec.interval is not None
     lo, hi = spec.interval
     assert lo < hi, f"interval 不可為空或反向：({lo}, {hi})"
+
+
+# ─────────────────────────────────────────────
+# TC-U-37：BoundExtractor——bool 型 model_val=None（未約束布林）
+# ─────────────────────────────────────────────
+
+
+def test_bound_extractor_bool_unconstrained():  # type: ignore[no-untyped-def]
+    """TC-U-37：未約束的 Bool 變數（model[var]=None）→ valid_set={True,False}，確保 LLM 知道須輸出 bool。"""
+    b = z3.Bool("b_unconstrained")
+    # 建立一個不含 b 的 SAT model（b 未出現在約束中，model[b] 為 None）
+    x = z3.Int("x_dummy")
+    s = z3.Solver()
+    s.add(x == 1)
+    assert s.check() == z3.sat
+    model = s.model()
+
+    extractor = BoundExtractor()
+    specs = extractor.extract(model, {"b": b}, {"b": "bool"})
+
+    assert len(specs) == 1
+    spec = specs[0]
+    assert spec.var_name == "b"
+    assert spec.var_type == "bool"
+    assert spec.valid_set == frozenset({True, False}), (
+        f"未約束布林應 valid_set={{True, False}}，實際 {spec.valid_set}"
+    )
+    assert spec.interval is None
+
+
+# ─────────────────────────────────────────────
+# TC-U-38：BoundExtractor——int 型 model_val=None（未約束整數）
+# ─────────────────────────────────────────────
+
+
+def test_bound_extractor_int_unconstrained():  # type: ignore[no-untyped-def]
+    """TC-U-38：未約束的 Int 變數（model[var]=None）→ interval=None, valid_set=None。"""
+    y = z3.Int("y_unconstrained")
+    # 建立一個不含 y 的 SAT model
+    x = z3.Int("x_dummy2")
+    s = z3.Solver()
+    s.add(x == 5)
+    assert s.check() == z3.sat
+    model = s.model()
+
+    extractor = BoundExtractor()
+    specs = extractor.extract(model, {"y": y}, {"y": "int"})
+
+    assert len(specs) == 1
+    spec = specs[0]
+    assert spec.var_name == "y"
+    assert spec.var_type == "int"
+    assert spec.interval is None, f"未約束整數應 interval=None，實際 {spec.interval}"
+    assert spec.valid_set is None
+
+
+# ─────────────────────────────────────────────
+# TC-U-39：BoundExtractor——int 型使用 domain_bounds
+# ─────────────────────────────────────────────
+
+
+def test_bound_extractor_int_with_domain_bounds():  # type: ignore[no-untyped-def]
+    """TC-U-39：domain_bounds 提供時，int 型使用 [model_val, model_val+10] clamped 到 [lo, hi]。"""
+    x = z3.Int("age")
+    s = z3.Solver()
+    s.add(x == 70)
+    assert s.check() == z3.sat
+    model = s.model()
+
+    extractor = BoundExtractor()
+    specs = extractor.extract(
+        model,
+        {"age": x},
+        {"age": "int"},
+        domain_bounds={"age": [0, 130]},
+    )
+
+    assert len(specs) == 1
+    spec = specs[0]
+    # model_val=70, interval=[70, 80], clamped to [0,130] → [70, 80]
+    assert spec.interval == (70.0, 80.0), (
+        f"domain_bounds 提供時應使用 [model_val, model_val+10] clamped，實際 {spec.interval}"
+    )
+
+
+# ─────────────────────────────────────────────
+# TC-U-40：BoundExtractor——float 型正常值
+# ─────────────────────────────────────────────
+
+
+def test_bound_extractor_float_normal():  # type: ignore[no-untyped-def]
+    """TC-U-40：float 型變數萃取 interval=(val-10, val+10)。"""
+    r = z3.Real("r")
+    s = z3.Solver()
+    s.add(r == z3.RealVal("3.5"))
+    assert s.check() == z3.sat
+    model = s.model()
+
+    extractor = BoundExtractor()
+    specs = extractor.extract(model, {"r": r}, {"r": "float"})
+
+    assert len(specs) == 1
+    spec = specs[0]
+    assert spec.var_name == "r"
+    assert spec.var_type == "float"
+    assert spec.interval is not None
+    lo, hi = spec.interval
+    assert lo < hi, f"float interval 應為合法區間：({lo}, {hi})"
+    # midpoint 應接近 3.5
+    assert abs((lo + hi) / 2 - 3.5) < 0.1, (
+        f"float interval 中點應接近 3.5，實際 ({lo}, {hi})"
+    )
+
+
+# ─────────────────────────────────────────────
+# TC-U-41b：BoundExtractor——float 型 model_val=None（未約束）
+# ─────────────────────────────────────────────
+
+
+def test_bound_extractor_float_unconstrained():  # type: ignore[no-untyped-def]
+    """TC-U-41b：未約束的 Real 變數（model[var]=None）→ interval=None。"""
+    r = z3.Real("r_unconstrained")
+    x = z3.Int("x_dummy3")
+    s = z3.Solver()
+    s.add(x == 7)
+    assert s.check() == z3.sat
+    model = s.model()
+
+    extractor = BoundExtractor()
+    specs = extractor.extract(model, {"r": r}, {"r": "float"})
+
+    assert len(specs) == 1
+    spec = specs[0]
+    assert spec.var_type == "float"
+    assert spec.interval is None, f"未約束 float 應 interval=None，實際 {spec.interval}"
+    assert spec.valid_set is None

@@ -21,7 +21,7 @@ class IFLConfig(BaseSettings):
     llm_provider: str = Field(default="openai")
     llm_model: str = Field(default="gpt-4o")
     llm_api_key: str = Field(default="")
-    llm_temperature: float = Field(default=0.3)
+    llm_temperature: float = Field(default=0.9)
 
     # ── SMT ──
     smt_timeout_ms: int = Field(default=10_000)

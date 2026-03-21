@@ -55,6 +55,15 @@ class PromptConstructor:
 
         direction_str = "True" if gap.flip_direction == "F2T" else "False"
 
+        # §diversity（多樣性要求）
+        sec_diversity = (
+            "【多樣性要求】\n"
+            "請生成一個在醫療情境上自然多樣的測試案例。\n"
+            "- 年齡請在符合約束的範圍內隨機選擇，不要固定使用同一個數字\n"
+            "- 接種間隔請在符合約束的範圍內自由選擇\n"
+            "- 整體數值組合應反映真實的病患多樣性"
+        )
+
         # §3 固定部分（語意引導版）
         lines: list[str] = ["【臨床情境引導】", "請根據以下邏輯約束，生成一個符合真實醫療情境的測試案例：", ""]
         for bs in bound_specs:
@@ -119,7 +128,7 @@ class PromptConstructor:
                 f"原始碼：\n"
                 f"{ctx}"
             )
-            return "\n\n".join([sec1, sec2, sec3, sec4])
+            return "\n\n".join([sec1, sec2, sec_diversity, sec3, sec4])
 
         full = _build_full(source_context)
 
@@ -132,7 +141,7 @@ class PromptConstructor:
                 f"情境：{domain_context}\n"
                 f"原始碼：\n"
             )
-            fixed_len = len(sec1_header) + len("\n\n") * 3 + len(sec2) + len(sec3) + len(sec4)
+            fixed_len = len(sec1_header) + len("\n\n") * 4 + len(sec2) + len(sec_diversity) + len(sec3) + len(sec4)
             budget = self.MAX_TOKENS - fixed_len
 
             if budget > 0:

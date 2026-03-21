@@ -48,9 +48,9 @@ def _run_injected(source: str, call_args: dict) -> tuple[object, ProbeLog]:  # t
     }
 
     # 設定全域 log 與 test_id
-    old_log = probe_mod._IFL_GLOBAL_LOG
-    probe_mod._IFL_GLOBAL_LOG = log
-    probe_mod._IFL_TEST_ID.value = "T001"
+    old_log = probe_mod._GLOBAL_LOG
+    probe_mod._GLOBAL_LOG = log
+    probe_mod._CURRENT_TEST_ID.value = "T001"
 
     try:
         exec(compile(injected_src, "<injected>", "exec"), module_globals)  # noqa: S102
@@ -58,7 +58,7 @@ def _run_injected(source: str, call_args: dict) -> tuple[object, ProbeLog]:  # t
         func = next(v for v in module_globals.values() if callable(v) and not isinstance(v, type))
         result = func(**call_args)
     finally:
-        probe_mod._IFL_GLOBAL_LOG = old_log
+        probe_mod._GLOBAL_LOG = old_log
 
     return result, log
 
@@ -83,16 +83,16 @@ def test_short_circuit_bypass():  # type: ignore[no-untyped-def]
         "_ifl_record_decision": _ifl_record_decision,
     }
 
-    old_log = probe_mod._IFL_GLOBAL_LOG
-    probe_mod._IFL_GLOBAL_LOG = log
-    probe_mod._IFL_TEST_ID.value = "T001"
+    old_log = probe_mod._GLOBAL_LOG
+    probe_mod._GLOBAL_LOG = log
+    probe_mod._CURRENT_TEST_ID.value = "T001"
     try:
         exec(compile(injected_src, "<injected>", "exec"), module_globals)  # noqa: S102
         func = module_globals["f"]
         assert callable(func)
         func(x=-5)  # type: ignore[operator]
     finally:
-        probe_mod._IFL_GLOBAL_LOG = old_log
+        probe_mod._GLOBAL_LOG = old_log
 
     cond_ids = [r.cond_id for r in log.records]
     # 應有兩個條件的記錄（True 和 x>0），不能因短路而漏掉任何一個
@@ -132,8 +132,8 @@ def test_semantic_equivalence(vaccine_source_path, vaccine_source_code):  # type
         "_ifl_probe": _ifl_probe,
         "_ifl_record_decision": _ifl_record_decision,
     }
-    old_log = probe_mod._IFL_GLOBAL_LOG
-    probe_mod._IFL_GLOBAL_LOG = log
+    old_log = probe_mod._GLOBAL_LOG
+    probe_mod._GLOBAL_LOG = log
     exec(compile(injected_src, "<injected>", "exec"), inj_globals)  # noqa: S102
     inj_func = inj_globals["check_vaccine_eligibility"]
     assert callable(inj_func)
@@ -147,14 +147,14 @@ def test_semantic_equivalence(vaccine_source_path, vaccine_source_code):  # type
             days = rng.randint(0, 400)
             egg = rng.choice([True, False])
 
-            probe_mod._IFL_TEST_ID.value = f"T{i:03d}"
+            probe_mod._CURRENT_TEST_ID.value = f"T{i:03d}"
             orig_result = orig_module.check_vaccine_eligibility(age, high_risk, days, egg)
             inj_result = inj_func(age=age, high_risk=high_risk, days_since_last=days, egg_allergy=egg)  # type: ignore[call-arg]
 
             if orig_result != inj_result:
                 mismatches += 1
     finally:
-        probe_mod._IFL_GLOBAL_LOG = old_log
+        probe_mod._GLOBAL_LOG = old_log
 
     assert mismatches == 0, f"探針改變了語意：{mismatches}/100 組輸入結果不符"
 
@@ -184,17 +184,17 @@ def test_probe_overhead(vaccine_source_path, vaccine_source_code):  # type: igno
         "_ifl_probe": _ifl_probe,
         "_ifl_record_decision": _ifl_record_decision,
     }
-    old_log = probe_mod._IFL_GLOBAL_LOG
-    probe_mod._IFL_GLOBAL_LOG = log
-    probe_mod._IFL_TEST_ID.value = "PERF"
+    old_log = probe_mod._GLOBAL_LOG
+    probe_mod._GLOBAL_LOG = log
+    probe_mod._CURRENT_TEST_ID.value = "PERF"
     exec(compile(injected_src, "<injected>", "exec"), inj_globals)  # noqa: S102
     inj_func = inj_globals["check_vaccine_eligibility"]
     assert callable(inj_func)
 
     # TC-U-11 測量「結構性注入開銷」，即 AST 重寫帶來的額外變數賦值與函式呼叫開銷。
-    # 測量期間設 _IFL_GLOBAL_LOG = None，_ifl_probe 直接 return value（無鎖定/列表操作），
+    # 測量期間設 _GLOBAL_LOG = None，_ifl_probe 直接 return value（無鎖定/列表操作），
     # 這樣才能分離「語法轉換」vs「記錄寫入」兩部分的開銷。
-    probe_mod._IFL_GLOBAL_LOG = None  # 停用記錄，僅測量結構開銷
+    probe_mod._GLOBAL_LOG = None  # 停用記錄，僅測量結構開銷
 
     N = 10_000
 
@@ -210,7 +210,7 @@ def test_probe_overhead(vaccine_source_path, vaccine_source_code):  # type: igno
         inj_func(age=70, high_risk=True, days_since_last=200, egg_allergy=False)  # type: ignore[call-arg]
     t_inj = _time.perf_counter() - t_inj_start
 
-    probe_mod._IFL_GLOBAL_LOG = old_log
+    probe_mod._GLOBAL_LOG = old_log
 
     ratio = t_inj / t_orig if t_orig > 0 else 1.0
     # TC-U-11 原始規格 ≤ 1.15（15%），但該閾值假設被測函式有足夠計算量。
@@ -245,14 +245,14 @@ def test_thread_safety(vaccine_source_code):  # type: ignore[no-untyped-def]
     inj_func = inj_globals["check_vaccine_eligibility"]
     assert callable(inj_func)
 
-    old_log = probe_mod._IFL_GLOBAL_LOG
-    probe_mod._IFL_GLOBAL_LOG = log
+    old_log = probe_mod._GLOBAL_LOG
+    probe_mod._GLOBAL_LOG = log
 
     NUM_THREADS = 10
     CALLS_PER_THREAD = 100
 
     def worker(thread_id: int) -> None:
-        probe_mod._IFL_TEST_ID.value = f"T{thread_id:02d}"
+        probe_mod._CURRENT_TEST_ID.value = f"T{thread_id:02d}"
         for _ in range(CALLS_PER_THREAD):
             inj_func(age=70, high_risk=True, days_since_last=200, egg_allergy=False)  # type: ignore[call-arg]
 
@@ -262,7 +262,7 @@ def test_thread_safety(vaccine_source_code):  # type: ignore[no-untyped-def]
     for t in threads:
         t.join()
 
-    probe_mod._IFL_GLOBAL_LOG = old_log
+    probe_mod._GLOBAL_LOG = old_log
 
     # 疫苗函式 k 條件（每次呼叫 k 筆記錄）
     # 疫苗邏輯含 5 個原子條件（age>=65, age>=18, high_risk, days>180, egg_allergy）

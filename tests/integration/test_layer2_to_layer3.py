@@ -24,6 +24,7 @@ from ifl_mcdc.layer1.probe_injector import ProbeInjector
 from ifl_mcdc.layer2.gap_analyzer import GapAnalyzer
 from ifl_mcdc.layer2.smt_synthesizer import SMTConstraintSynthesizer
 from ifl_mcdc.layer3.acceptance_gate import AcceptanceGate
+from ifl_mcdc.layer3.domain_validator import DEFAULT_MEDICAL_RULES, DomainValidator
 from ifl_mcdc.layer3.llm_sampler import LLMSampler, MockLLMBackend
 from ifl_mcdc.layer3.prompt_builder import PromptConstructor
 from ifl_mcdc.models.coverage_matrix import GapEntry
@@ -64,7 +65,7 @@ def _load_instrumented(
     sys.modules[module_name] = mod
 
     log = ProbeLog()
-    pi._IFL_GLOBAL_LOG = log
+    pi._GLOBAL_LOG = log
     setattr(mod, "_ifl_probe", pi._ifl_probe)
     setattr(mod, "_ifl_record_decision", pi._ifl_record_decision)
 
@@ -78,7 +79,7 @@ def _run_test(
 ) -> str:
     """執行單一測試案例，回傳 test_id。"""
     test_id = f"T{uuid.uuid4().hex[:8]}"
-    setattr(pi._IFL_TEST_ID, "value", test_id)
+    setattr(pi._CURRENT_TEST_ID, "value", test_id)
     try:
         getattr(mod, func_name)(**test_case)
     except Exception:
@@ -119,11 +120,11 @@ def test_bound_specs_feed_prompt_and_sampler() -> None:
         {"age": 20, "high_risk": True, "days_since_last": 200, "healthy": True}
     )
     mock = MockLLMBackend([valid_json])
-    sampler = LLMSampler(mock)
+    sampler = LLMSampler(mock, DomainValidator(DEFAULT_MEDICAL_RULES))
 
-    data = sampler.sample(prompt)
-    # LLMSampler 只負責 JSON 解析，驗證由 Orchestrator 負責
+    data, vr = sampler.sample(prompt)
     assert isinstance(data, dict), f"應回傳 dict，得到 {type(data)}"
+    assert vr.passed, f"DomainValidator 應通過，實際 {vr.violations}"
     assert "age" in data or "high_risk" in data, "回傳 dict 應含預期欄位"
 
 
@@ -242,8 +243,8 @@ def test_one_full_iteration_reduces_loss() -> None:
         dn, first_gap, smt_result.bound_specs or [], _SIMPLE_FUNC_SIG, "測試情境"
     )
     mock = MockLLMBackend([tx_json])
-    sampler = LLMSampler(mock)
-    new_case = sampler.sample(prompt)
+    sampler = LLMSampler(mock, DomainValidator(DEFAULT_MEDICAL_RULES))
+    new_case, _ = sampler.sample(prompt)
 
     # 執行新測試案例並透過 gate 評估
     test_id = _run_test(mod, "check", new_case)

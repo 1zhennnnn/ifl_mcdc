@@ -103,8 +103,8 @@ def test_vaccine_e2e_full_run() -> None:
     )
 
     # ── 測試套件來源驗證 ────────────────────────────────
-    # "smt"：LLM path 補跑的 SMT complement，用來完成 flip pair 另一側
-    allowed_sources = {"random", "llm", "smt"}
+    # "random"：初始隨機案例；"llm"：LLM 生成且通過驗證
+    allowed_sources = {"random", "llm"}
     for tc in result.test_suite:
         src = tc.get("__source", "?")
         assert src in allowed_sources, f"未知來源標記：{src!r}，案例：{tc}"
@@ -121,13 +121,12 @@ def test_vaccine_e2e_full_run() -> None:
             f"loss_history[{i}]={history[i]} > [{i-1}]={history[i-1]}：損失不應增加"
         )
 
-    # ── 所有語意案例通過 DomainValidator ──────────────────
-    # "smt" 互補案例由 Z3 純邏輯生成，不要求符合醫療語意規則，故跳過驗證
+    # ── 所有案例必須通過 DomainValidator ─────────────────
+    # 架構保證：random 初始案例由 _generate_random_test 生成合法值；
+    # llm 案例由 LLMSampler 內部 DomainValidator 驗證後才回傳
     validator = DomainValidator()
     for tc in result.test_suite:
         source = tc.get("__source")
-        if source not in ("random", "llm"):
-            continue
         clean = {k: v for k, v in tc.items() if not k.startswith("__")}
         vr = validator.validate(json.dumps(clean))
         assert vr.passed, (

@@ -15,7 +15,7 @@ from ifl_mcdc.models.smt_models import BoundSpec
 class BoundExtractor:
     """從 Z3 SAT model 萃取每個變數的 BoundSpec。
 
-    int  型：interval = (model_val - 10, model_val + 10)
+    int  型：interval = (model_val, model_val + 10)（從 model_val 起向上 10，確保 LLM 選到有效值）
     bool 型：valid_set = frozenset({bool(model_val)})
     Z3 未約束變數（model[var] 為 None）：interval = None
     """
@@ -33,8 +33,8 @@ class BoundExtractor:
             z3_model: Z3 SAT model（s.model()）。
             z3_vars: var_name → Z3 變數的映射。
             domain_types: var_name → "int" | "bool" | "float" 的映射。
-            domain_bounds: var_name → [min, max]。若有設定，int 型使用此範圍
-                           而非 model_val±10。
+            domain_bounds: var_name → [min, max]。若有設定，int 型 interval 的
+                           下界 clamp 到 lo，上界 clamp 到 hi。
 
         Returns:
             每個變數一個 BoundSpec 的列表。
@@ -46,12 +46,13 @@ class BoundExtractor:
 
             if var_type == "bool":
                 if model_val is None:
+                    # 未約束的 bool 變數：告知 LLM 必須是 bool 值（True 或 False）
                     specs.append(
                         BoundSpec(
                             var_name=var_name,
                             var_type="bool",
                             interval=None,
-                            valid_set=None,
+                            valid_set=frozenset({True, False}),
                         )
                     )
                 else:
@@ -82,9 +83,12 @@ class BoundExtractor:
                         int_val = 0
                     if domain_bounds and var_name in domain_bounds:
                         lo, hi = domain_bounds[var_name][0], domain_bounds[var_name][1]
-                        interval: tuple[float, float] = (float(lo), float(hi))
+                        interval: tuple[float, float] = (
+                            float(max(lo, int_val)),
+                            float(min(hi, int_val + 10)),
+                        )
                     else:
-                        interval = (float(int_val - 10), float(int_val + 10))
+                        interval = (float(int_val), float(int_val + 10))
                     specs.append(
                         BoundSpec(
                             var_name=var_name,

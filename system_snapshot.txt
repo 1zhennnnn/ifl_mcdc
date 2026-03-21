@@ -1,4 +1,4 @@
-﻿=== 系統快照 2026-03-21 08:14 ===
+﻿=== 系統快照 2026-03-21 14:41 ===
 
 === 檔案清單 ===
 
@@ -8,12 +8,11 @@ IFL 銝餅餈游?嚗?隤蹂?撅斗芋蝯??瑁?摰??IFL 餈凋誨?
 ??SDD 蝚?6 蝡?"""
 from __future__ import annotations
 
-import json
 import random
 import sys
 import types
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import cast
 
@@ -51,10 +50,10 @@ class IFLOrchestrator:
         self.parser = ASTParser()
         self.engine = MCDCCoverageEngine()
         self.analyzer = GapAnalyzer()
-        self.smt = SMTConstraintSynthesizer()
+        self.smt = SMTConstraintSynthesizer(domain_bounds=config.domain_bounds)
         self.prompt = PromptConstructor()
         actual_backend = backend if backend is not None else config.llm_backend
-        self.sampler = LLMSampler(actual_backend, config.llm_retry_delay)
+        self.sampler = LLMSampler(actual_backend, config.domain_validator, config.llm_retry_delay)
         self.gate = AcceptanceGate(self.engine)
         self._infeasible: set[str] = set()
 
@@ -90,7 +89,9 @@ class IFLOrchestrator:
         # ?? 甇仿? 3嚗?憪璈葫閰???
         test_suite: list[dict[str, object]] = []
         for _ in range(3):
-            test_case = self._generate_random_test(dn, self.config.domain_types)
+            test_case = self._generate_random_test(
+                dn, self.config.domain_types, self.config.domain_bounds
+            )
             test_id = self._run_test(instrumented_module, test_case, log)
             test_suite.append({**test_case, "__test_id": test_id, "__source": "random"})
 
@@ -114,7 +115,7 @@ class IFLOrchestrator:
                 break  # ??擗撩???銝銵?
             # 甇仿? 2嚗3 ??蝝? 峖_gap嚗??啣銵圾蝛粹? 峏嚗ound_specs嚗?            try:
                 smt_result = self.smt.synthesize(
-                    dn, gap, self.config.domain_types, self.config.domain_bounds
+                    dn, gap, self.config.domain_types
                 )
             except (Z3TimeoutError, Z3UNSATError):
                 self._infeasible.add(gap.condition_id)
@@ -126,85 +127,47 @@ class IFLOrchestrator:
                 loss_history.append(matrix.compute_loss())
                 continue
 
-            # 甇仿? 3嚗?葫閰行?靘?SMT-direct ??LLM ?拍車頝臬?嚗?            if self.config.smt_direct:
-                # 蝝MT撠璅∪?嚗?亙銵?Z3 銝餅芋??+ 鈭?璅∪?嚗耦???渡蕃頧?
-                # 銝?思遙雿?LLM ?亙
-                if not smt_result.model:
-                    loss_history.append(matrix.compute_loss())
-                    continue
-                # 銝餅芋??gap 蝧餉??孵???湛?
-                main_case = self._z3_model_to_python(
-                    smt_result.model, self.config.domain_types
-                )
-                if main_case:
-                    main_id = self._run_test(instrumented_module, main_case, log)
-                    if self.gate.evaluate(matrix, log, main_id):
-                        test_suite.append(
-                            {**main_case, "__test_id": main_id, "__source": "smt"}
-                        )
-                # 鈭?璅∪?嚗銝?湛?嚗Ⅱ靽蕃頧????賣?獢?
-                if smt_result.complement_model:
-                    comp_case = self._z3_model_to_python(
-                        smt_result.complement_model, self.config.domain_types
+            # 甇仿? 3嚗? 峏 頧??箄?嗉?閮?內嚗??LLM ?Ｙ?皜祈岫獢?
+            # LLMSampler ?折?? JSON 閫??憭望???DomainValidator 撽?嚗?憭?閰?MAX_RETRIES 甈∴?
+            p_prompt = self.prompt.build(
+                dn,
+                gap,
+                smt_result.bound_specs or [],
+                self.config.func_signature,
+                self.config.domain_context,
+            )
+            # 甇仿? 4嚗銵?True ?湛?AcceptanceGate 撽?
+            try:
+                new_case, _ = self.sampler.sample(p_prompt)
+                true_id = self._run_test(instrumented_module, new_case, log)
+                if self.gate.evaluate(matrix, log, true_id):
+                    test_suite.append(
+                        {**new_case, "__test_id": true_id, "__source": "llm"}
                     )
-                    if comp_case:
-                        comp_id = self._run_test(instrumented_module, comp_case, log)
-                        if self.gate.evaluate(matrix, log, comp_id):
-                            test_suite.append(
-                                {**comp_case, "__test_id": comp_id, "__source": "smt"}
-                            )
-                loss_history.append(matrix.compute_loss())
-                continue  # 頝喲? LLM 頝臬?
-            else:
-                # 璅? IFL 頝臬?嚗? 峏 頧??箄?嗉?閮?內嚗??LLM
-                p_prompt = self.prompt.build(
-                    dn,
+            except LLMSamplingError:
+                pass
+
+            # 甇仿? 5嚗alse ?湛?鋆?嚗???SMT complement_bound_specs 蝝?嚗???LLM ??
+            # ?拙????靽??血?璇辣?潔??湛?瘨??True ?湧蝵拙??渲????????            if smt_result.complement_bound_specs:
+                comp_gap = replace(
                     gap,
-                    smt_result.bound_specs or [],
+                    flip_direction="T2F" if gap.flip_direction == "F2T" else "F2T",
+                )
+                comp_prompt = self.prompt.build(
+                    dn, comp_gap,
+                    smt_result.complement_bound_specs,
                     self.config.func_signature,
                     self.config.domain_context,
                 )
-                # Orchestrator 鞎痊??撽??岫嚗?憭?3 甈∴?
-                # LLMSamplingError嚗SON 閫??憭望?嚗?撽?銝活銝? ??頝喲??祈憚嚗?頛芷?閰?                _current_prompt = p_prompt
-                new_case: dict[str, object] | None = None
-                for _val_attempt in range(3):
-                    try:
-                        _candidate = self.sampler.sample(_current_prompt)
-                    except LLMSamplingError:
-                        break  # JSON 閫??憭望?嚗璉頛?                    _vr = self.config.domain_validator.validate(
-                        json.dumps(_candidate)
-                    )
-                    if _vr.passed:
-                        new_case = _candidate
-                        break
-                    # 撽?憭望?嚗? violations 蝺函Ⅳ?箔耨甇??蝷綽?蝜潛??岫
-                    _current_prompt = self._build_validation_prompt(
-                        p_prompt, _vr.to_corrective_prompt()
-                    )
-                if new_case is None:
-                    loss_history.append(matrix.compute_loss())
-                    continue
-
-            # 甇仿? 4嚗?甇仿? 5嚗?AcceptanceGate 撽? L(X) ?臬銝?嚗? LLM 頝臬?韏啣?ㄐ嚗?            test_id = self._run_test(instrumented_module, new_case, log)
-            accepted = self.gate.evaluate(matrix, log, test_id)
-
-            if accepted:
-                test_suite.append(
-                    {**new_case, "__test_id": test_id, "__source": "llm"}
-                )
-
-            # SMT 鈭?璅∪?鋆?蝧餉?撠銝?湛?
-            # LLM ????靘?閬? gap ?璅??憒?c_i=True嚗?
-            # 雿?MC/DC unique-cause ?閬?湛?c_i=True ??c_i=False嚗????冽 log嚗?            # 銝隞?隞嗅澆??函?蝻箏?鈭??湛?flip pair 瘞賊??⊥???????            if smt_result.complement_model:
-                comp_case = self._z3_model_to_python(
-                    smt_result.complement_model, self.config.domain_types
-                )
-                if comp_case:
-                    comp_id = self._run_test(instrumented_module, comp_case, log)
-                    if self.gate.evaluate(matrix, log, comp_id):
+                try:
+                    false_case, _ = self.sampler.sample(comp_prompt)
+                    false_id = self._run_test(instrumented_module, false_case, log)
+                    if self.gate.evaluate(matrix, log, false_id):
                         test_suite.append(
-                            {**comp_case, "__test_id": comp_id, "__source": "smt"}
+                            {**false_case, "__test_id": false_id, "__source": "llm"}
                         )
+                except LLMSamplingError:
+                    pass
 
             loss_history.append(matrix.compute_loss())
 
@@ -234,7 +197,7 @@ class IFLOrchestrator:
         import ifl_mcdc.layer1.probe_injector as pi
 
         test_id = f"T{uuid.uuid4().hex[:8]}"
-        setattr(pi._IFL_TEST_ID, "value", test_id)
+        setattr(pi._CURRENT_TEST_ID, "value", test_id)
         try:
             getattr(module, self.config.func_name)(**test_case)
         except Exception as _exc:  # noqa: BLE001  # 雿輻?撘?賣??箔遙??憭?            pass  # 皜祈岫憭望?銝蔣?踵????撌脣 if ????
@@ -253,52 +216,18 @@ class IFLOrchestrator:
         """撠?撘釣?亙?銵冽?芋蝯?銝行??策摰? ProbeLog??""
         import ifl_mcdc.layer1.probe_injector as pi
 
-        pi._IFL_GLOBAL_LOG = log
+        pi._GLOBAL_LOG = log
         setattr(module, "_ifl_probe", pi._ifl_probe)
         setattr(module, "_ifl_record_decision", pi._ifl_record_decision)
-
-    @staticmethod
-    def _z3_model_to_python(
-        model: dict[str, object],
-        domain_types: dict[str, str],
-    ) -> dict[str, object]:
-        """撠?Z3 model 摮頧???Python ???潘??? smt_direct 璅∪?雿輻嚗?""
-        import z3 as _z3
-
-        result: dict[str, object] = {}
-        for var_name, val in model.items():
-            if val is None:
-                continue
-            t = domain_types.get(var_name, "int")
-            try:
-                if t == "bool":
-                    result[var_name] = bool(_z3.is_true(val))
-                elif t == "int":
-                    result[var_name] = int(str(val))
-                else:
-                    result[var_name] = float(str(val).rstrip("?"))
-            except (ValueError, TypeError):
-                pass
-        return result
-
-    @staticmethod
-    def _build_validation_prompt(original: str, violations: str) -> str:
-        """撱箸???撽?憭望?敺?靽格迤?內閰?""
-        return (
-            f"銝?甈∩?????隞乩???嚗????嚗n"
-            f"{violations}\n\n"
-            f"隢?頛詨????JSON ?拐辣嚗?閬?隞颱??嗡????n\n"
-            f"???瘙?\n"
-            f"{original}"
-        )
 
     @staticmethod
     def _generate_random_test(
         dn: DecisionNode,
         domain_types: dict[str, str],
+        domain_bounds: dict[str, list[int]] | None = None,
     ) -> dict[str, object]:
         """?箸捱蝑?暺?????貊??璈潦?
-        int ??randint(0, 130)嚗泵??DomainValidator 撟湧翩閬? 0嚚?30嚗?        bool ??choice([True, False])
+        int ??randint(lo, hi)嚗?????domain_bounds嚗?∟身摰? [0, 130]??        bool ??choice([True, False])
         """
         test: dict[str, object] = {}
         seen: set[str] = set()
@@ -311,16 +240,20 @@ class IFLOrchestrator:
                 if var_type == "bool":
                     test[var_name] = random.choice([True, False])
                 else:
-                    test[var_name] = random.randint(0, 130)
+                    bounds = (domain_bounds or {}).get(var_name, [0, 130])
+                    test[var_name] = random.randint(bounds[0], bounds[1])
         return test
+
 
 === ifl_mcdc\layer3\llm_sampler.py ===
 """
-LLM ?⊥見?剁??澆 LLM 敺垢?圾??JSON??閰佗???撠?JSON 閫??憭望?嚗?
-?桐??瑁痊嚗雯頝臬惜 + JSON 閫??????撽???IFLOrchestrator ?刻翮隞?艘?葉蝯曹?鞎痊??
+LLM ?⊥見?剁??澆 LLM 敺垢?圾??JSON?銵?DomainValidator 撽???閰艾?
+靘?SDD 5.2 蝭閬嚗LMSampler 鞎痊蝬脰楝撅扎SON 閫??????霅?
+?憭?閰?MAX_RETRIES 甈∴?? (parsed_dict, ValidationResult)??
 TC-U-47: 蝚砌?甈⊥?????TC-U-48: 閫?? markdown ????JSON
 TC-U-49: 蝚砌?甈∪??喳? JSON ??蝚砌?甈⊥???TC-U-50: ?券?岫憭望? ??LLMSamplingError
-TC-U-51: token_log 閮?瘥活?岫 / ????"""
+TC-U-51: token_log 閮?瘥活?岫 / ????TC-U-73: DomainValidator 撽?憭望? ???岫
+"""
 from __future__ import annotations
 
 import json
@@ -329,6 +262,9 @@ import time
 from abc import ABC, abstractmethod
 
 from ifl_mcdc.exceptions import LLMSamplingError
+from ifl_mcdc.models.validation import ValidationResult
+
+# DomainValidator ?冽迨撅文??伐?撖衣 SDD 5.2 蝭閬嚗ample ?折撽?嚗?from ifl_mcdc.layer3.domain_validator import DomainValidator
 
 
 # ?????????????????????????????????????????????
@@ -413,29 +349,31 @@ class MockLLMBackend(LLMBackend):
 
 
 class LLMSampler:
-    """?澆 LLM 敺垢嚗?閰西圾??JSON嚗???token 瘨?
-    ?桐??瑁痊嚗?鞎痊蝬脰楝撅方? JSON 閫????    ??撽???IFLOrchestrator ?刻翮隞?艘?葉蝯曹?鞎痊??    """
+    """?澆 LLM 敺垢嚗?閰西圾??JSON ????霅?閮? token 瘨?
+    靘?SDD 5.2 蝭嚗?鞎祉雯頝臬惜?SON 閫????DomainValidator 撽???    ?憭?閰?MAX_RETRIES 甈∴?瘨菔? JSON 閫??憭望?????霅仃????    """
 
     MAX_RETRIES: int = 3
 
     def __init__(
         self,
         backend: LLMBackend,
+        validator: DomainValidator,
         retry_delay: float = 2.0,
     ) -> None:
         self.backend = backend
+        self.validator = validator
         self.retry_delay = retry_delay
         self.token_log: list[dict[str, object]] = []
 
-    def sample(self, prompt: str) -> dict[str, object]:
-        """?憭?閰?MAX_RETRIES 甈∴??蝚砌????圾?? JSON dict??
-        ??撠?JSON 閫??憭望??脰??岫嚗雯頝舫隤文?璅??閰佗???        ??隤?撽?銝甇文惜嚗 IFLOrchestrator 鞎痊??
+    def sample(self, prompt: str) -> tuple[dict[str, object], ValidationResult]:
+        """?憭?閰?MAX_RETRIES 甈∴??蝚砌??? DomainValidator ??(dict, ValidationResult)??
+        ?岫閫貊璇辣嚗SON 閫??憭望??雯頝舫隤扎???霅仃??
         Args:
             prompt: Gap-Guided Prompt??
         Returns:
-            閫??????dict??
+            (parsed_dict, validation_result)??
         Raises:
-            LLMSamplingError: ?券?岫憭望?嚗SON 閫???雯頝舫隤歹???        """
+            LLMSamplingError: ?券?岫憭望?嚗SON 閫???雯頝舀?撽??航炊嚗?        """
         current_prompt = prompt
         last_error: str = ""
 
@@ -474,7 +412,12 @@ class LLMSampler:
                 last_error = f"JSON 閫??憭望?嚗parse_error}"
                 continue
 
-            return data
+            val_result = self.validator.validate(json.dumps(data))
+            if not val_result.passed:
+                last_error = f"??撽?憭望?嚗val_result.to_corrective_prompt()}"
+                continue
+
+            return data, val_result
 
         raise LLMSamplingError(
             f"LLM ?⊥見憭望?嚗歇?岫 {self.MAX_RETRIES} 甈～?敺隤歹?{last_error}"
@@ -688,6 +631,15 @@ class PromptConstructor:
 
         direction_str = "True" if gap.flip_direction == "F2T" else "False"
 
+        # 禮diversity嚗?璅?扯?瘙?
+        sec_diversity = (
+            "??璅?扯?瘙n"
+            "隢?????怎???銝?嗅?璅??皜祈岫獢??n"
+            "- 撟湧翩隢蝚血?蝝?????冽??豢?嚗?閬摰蝙?典?銝?摮n"
+            "- ?亦車??隢蝚血?蝝?????芰?豢?\n"
+            "- ?湧??詨潛??????祕?????璅??
+        )
+
         # 禮3 ?箏??典?嚗???撠?嚗?        lines: list[str] = ["?摨?憓?撠?, "隢?誑銝?頛舐?????銝?泵??撖阡??憓?皜祈岫獢?嚗?, ""]
         for bs in bound_specs:
             if bs.interval is not None:
@@ -750,7 +702,7 @@ class PromptConstructor:
                 f"??蝣潘?\n"
                 f"{ctx}"
             )
-            return "\n\n".join([sec1, sec2, sec3, sec4])
+            return "\n\n".join([sec1, sec2, sec_diversity, sec3, sec4])
 
         full = _build_full(source_context)
 
@@ -762,7 +714,7 @@ class PromptConstructor:
                 f"??嚗domain_context}\n"
                 f"??蝣潘?\n"
             )
-            fixed_len = len(sec1_header) + len("\n\n") * 3 + len(sec2) + len(sec3) + len(sec4)
+            fixed_len = len(sec1_header) + len("\n\n") * 4 + len(sec2) + len(sec_diversity) + len(sec3) + len(sec4)
             budget = self.MAX_TOKENS - fixed_len
 
             if budget > 0:
@@ -898,7 +850,7 @@ class IFLConfig(BaseSettings):
     llm_provider: str = Field(default="openai")
     llm_model: str = Field(default="gpt-4o")
     llm_api_key: str = Field(default="")
-    llm_temperature: float = Field(default=0.3)
+    llm_temperature: float = Field(default=0.9)
 
     # ?? SMT ??
     smt_timeout_ms: int = Field(default=10_000)
@@ -907,8 +859,6 @@ class IFLConfig(BaseSettings):
     max_iterations: int = Field(default=50)
     min_coverage: float = Field(default=1.0)
     llm_retry_delay: float = Field(default=2.0)
-    smt_direct: bool = Field(default=False)  # 蝝MT撠璅∪?嚗?乩蝙??Z3 model嚗??澆 LLM
-
     # ?? ?格?璅∠? ??
     func_name: str = Field(default="check_vaccine_eligibility")
     func_signature: str = Field(
@@ -929,7 +879,7 @@ class IFLConfig(BaseSettings):
     # ?? ???詨潮???霈????[min, max]嚗??
     domain_bounds: dict[str, list[int]] = Field(
         default={
-            "age": [18, 100],
+            "age": [0, 130],
             "days_since_last": [0, 3650],
         }
     )
@@ -955,27 +905,42 @@ rootdir: C:\Users\zhenn\MyNSN
 configfile: pyproject.toml
 plugins: anyio-4.12.1, dash-2.18.2, Faker-37.3.0, asyncio-0.23.7, cov-5.0.0
 asyncio: mode=Mode.STRICT
-collected 93 items
+collected 104 items
 
-tests\unit\test_layer1_ast_parser.py ......                              [  6%]
-tests\unit\test_layer1_coupling_graph.py .......                         [ 13%]
-tests\unit\test_layer1_coverage_engine.py .....                          [ 19%]
-tests\unit\test_layer1_probe_injector.py ....                            [ 23%]
-tests\unit\test_layer2_boolean_derivative.py ......                      [ 30%]
-tests\unit\test_layer2_gap_analyzer.py .....                             [ 35%]
-tests\unit\test_layer2_smt_synthesizer.py .........                      [ 45%]
+tests\unit\test_layer1_ast_parser.py ......                              [  5%]
+tests\unit\test_layer1_coupling_graph.py .......                         [ 12%]
+tests\unit\test_layer1_coverage_engine.py .....                          [ 17%]
+tests\unit\test_layer1_probe_injector.py ....                            [ 21%]
+tests\unit\test_layer2_boolean_derivative.py ......                      [ 26%]
+tests\unit\test_layer2_gap_analyzer.py .....                             [ 31%]
+tests\unit\test_layer2_smt_synthesizer.py F.............                 [ 45%]
 tests\unit\test_layer3_acceptance_gate.py ..                             [ 47%]
-tests\unit\test_layer3_domain_validator.py ........                      [ 55%]
-tests\unit\test_layer3_llm_sampler.py ......                             [ 62%]
-tests\unit\test_layer3_prompt_builder.py .....                           [ 67%]
-tests\unit\test_models.py .................                              [ 86%]
-tests\unit\test_orchestrator.py ......                                   [ 92%]
-tests\integration\test_layer1_to_layer2.py ....                          [ 96%]
-tests\integration\test_layer2_to_layer3.py ...                           [100%]
+tests\unit\test_layer3_domain_validator.py ........                      [ 54%]
+tests\unit\test_layer3_llm_sampler.py .......                            [ 61%]
+tests\unit\test_layer3_prompt_builder.py .....                           [ 66%]
+tests\unit\test_models.py .................                              [ 82%]
+tests\unit\test_orchestrator.py F..FF.FF                                 [ 90%]
+tests\integration\test_full_pipeline.py FF.                              [ 93%]
+tests\integration\test_layer1_to_layer2.py ..FF                          [ 97%]
+tests\integration\test_layer2_to_layer3.py F.F                           [100%]
 
-============================= 93 passed in 1.27s ==============================
+=========================== short test summary info ===========================
+FAILED tests/unit/test_layer2_smt_synthesizer.py::test_vaccine_c2_f2t_sat - N...
+FAILED tests/unit/test_orchestrator.py::test_run_returns_ifl_result - NameErr...
+FAILED tests/unit/test_orchestrator.py::test_budget_exhausted - NameError: na...
+FAILED tests/unit/test_orchestrator.py::test_loss_history_non_increasing - Na...
+FAILED tests/unit/test_orchestrator.py::test_domain_validator_retries_in_llm_sampler
+FAILED tests/unit/test_orchestrator.py::test_llm_sampling_error_skips_without_infeasible
+FAILED tests/integration/test_full_pipeline.py::test_layer1_to_layer2_data_flow
+FAILED tests/integration/test_full_pipeline.py::test_layer2_to_layer3_data_flow
+FAILED tests/integration/test_layer1_to_layer2.py::test_gap_list_feeds_smt_synthesis
+FAILED tests/integration/test_layer1_to_layer2.py::test_smt_result_feeds_bound_spec
+FAILED tests/integration/test_layer2_to_layer3.py::test_bound_specs_feed_prompt_and_sampler
+FAILED tests/integration/test_layer2_to_layer3.py::test_one_full_iteration_reduces_loss
+======================== 12 failed, 92 passed in 0.92s ========================
 
 === 測試函式清單 ===
+--- test_full_pipeline.py ---
 --- test_layer1_to_layer2.py ---
 --- test_layer2_to_layer3.py ---
 --- test_vaccine_e2e.py ---

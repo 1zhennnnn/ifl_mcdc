@@ -54,8 +54,8 @@ class SMTResult:
     """Z3 求解器的回傳結果。"""
 
     satisfiable: bool
-    model: dict[str, object] | None
-    bound_specs: list[BoundSpec] | None
-    core: list[str] | None
+    model: dict[str, object] | None = field(default=None)
+    bound_specs: list[BoundSpec] | None = field(default=None)             # True 側（目標條件=True）BoundSpec
+    complement_bound_specs: list[BoundSpec] | None = field(default=None)  # False 側（目標條件=False）BoundSpec
+    core: list[str] | None = field(default=None)
     solve_time: float = field(default=0.0)
-    complement_model: dict[str, object] | None = field(default=None)

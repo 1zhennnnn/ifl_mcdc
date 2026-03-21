@@ -24,8 +24,8 @@ from ifl_mcdc.models.probe_record import ProbeLog, ProbeRecord
 # Part A：全域 probe 函式（注入到被測模組的命名空間）
 # ──────────────────────────────────────────
 
-_IFL_GLOBAL_LOG: ProbeLog | None = None
-_IFL_TEST_ID: threading.local = threading.local()
+_GLOBAL_LOG: ProbeLog | None = None
+_CURRENT_TEST_ID: threading.local = threading.local()
 
 
 def _ifl_probe(cond_id: str, value: bool) -> bool:
@@ -38,14 +38,14 @@ def _ifl_probe(cond_id: str, value: bool) -> bool:
     Returns:
         原樣回傳 value，確保語意零干擾。
     """
-    if _IFL_GLOBAL_LOG is not None:
+    if _GLOBAL_LOG is not None:
         record = ProbeRecord(
-            test_id=getattr(_IFL_TEST_ID, "value", "UNKNOWN"),
+            test_id=getattr(_CURRENT_TEST_ID, "value", "UNKNOWN"),
             cond_id=cond_id,
             value=bool(value),
             decision=False,  # 暫填，稍後由 _ifl_record_decision 回填
         )
-        _IFL_GLOBAL_LOG.append(record)
+        _GLOBAL_LOG.append(record)
     return value  # ← 必須原樣回傳
 
 
@@ -56,13 +56,13 @@ def _ifl_record_decision(decision_id: str, result: bool) -> None:
         decision_id: 決策節點 ID，格式 "D{n}"。
         result: 整個決策表達式的布林結果。
     """
-    if _IFL_GLOBAL_LOG is None:
+    if _GLOBAL_LOG is None:
         return
-    test_id = getattr(_IFL_TEST_ID, "value", "UNKNOWN")
+    test_id = getattr(_CURRENT_TEST_ID, "value", "UNKNOWN")
     prefix = decision_id + ".c"
     to_update = [
         r
-        for r in reversed(_IFL_GLOBAL_LOG.records)
+        for r in reversed(_GLOBAL_LOG.records)
         if r.test_id == test_id and r.cond_id.startswith(prefix)
     ]
     for r in to_update:

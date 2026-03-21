@@ -1,0 +1,450 @@
+
+
+############################################################
+#  Fixture：貸款審核 loan_approval（k=6）
+#  預期 k=6，IFL 最大迭代=25
+############################################################
+
+=======================================================
+對照組A：純隨機  [貸款審核 loan_approval（k=6）]
+=======================================================
+Run 1: 收斂=False, 覆蓋率=0.0%, 迭代=0, 有效比=3/3=100.0%
+    T01 [random    ] [OK]  credit_score=596, annual_income=332379, loan_amount=5432654, has_collateral=False, employed=True, bankruptcy_history=False
+    T02 [random    ] [OK]  credit_score=747, annual_income=966580, loan_amount=5420221, has_collateral=False, employed=False, bankruptcy_history=True
+    T03 [random    ] [OK]  credit_score=743, annual_income=157077, loan_amount=9272530, has_collateral=True, employed=False, bankruptcy_history=True
+Run 2: 收斂=False, 覆蓋率=0.0%, 迭代=0, 有效比=3/3=100.0%
+    T01 [random    ] [OK]  credit_score=316, annual_income=150895, loan_amount=7859510, has_collateral=False, employed=True, bankruptcy_history=True
+    T02 [random    ] [OK]  credit_score=540, annual_income=234510, loan_amount=9464315, has_collateral=True, employed=False, bankruptcy_history=False
+    T03 [random    ] [OK]  credit_score=593, annual_income=1371805, loan_amount=3204035, has_collateral=True, employed=True, bankruptcy_history=True
+Run 3: 收斂=False, 覆蓋率=16.7%, 迭代=0, 有效比=3/3=100.0%
+    T01 [random    ] [OK]  credit_score=820, annual_income=1136166, loan_amount=5854637, has_collateral=True, employed=False, bankruptcy_history=False
+    T02 [random    ] [OK]  credit_score=475, annual_income=625423, loan_amount=503159, has_collateral=True, employed=True, bankruptcy_history=True
+    T03 [random    ] [OK]  credit_score=638, annual_income=1997499, loan_amount=6465791, has_collateral=True, employed=True, bankruptcy_history=False
+
+=======================================================
+對照組B：純LLM   [貸款審核 loan_approval（k=6）]
+=======================================================
+Run 1: 收斂=False, 覆蓋率=33.3%, 迭代=14, 有效比=14/14=100.0%
+    T01 [llm       ] [OK]  credit_score=361, annual_income=1168516, loan_amount=9819460, employed=False, has_collateral=False, bankruptcy_history=False
+    T02 [llm       ] [OK]  credit_score=765, annual_income=1362306, loan_amount=1426269, employed=True, has_collateral=True, bankruptcy_history=False
+    T03 [llm       ] [OK]  credit_score=525, annual_income=1907371, loan_amount=7981818, employed=True, has_collateral=False, bankruptcy_history=False
+    T04 [llm       ] [OK]  credit_score=545, annual_income=842176, loan_amount=3536119, employed=True, has_collateral=True, bankruptcy_history=False
+    T05 [llm       ] [OK]  credit_score=824, annual_income=1050469, loan_amount=9744691, employed=False, has_collateral=False, bankruptcy_history=False
+    T06 [llm       ] [OK]  credit_score=508, annual_income=23610, loan_amount=7291015, employed=False, has_collateral=False, bankruptcy_history=False
+    T07 [llm       ] [OK]  credit_score=347, annual_income=780806, loan_amount=6386923, employed=False, has_collateral=False, bankruptcy_history=False
+    T08 [llm       ] [OK]  credit_score=700, annual_income=50000, loan_amount=400000, employed=True, has_collateral=False, bankruptcy_history=False
+    T09 [llm       ] [OK]  credit_score=385, annual_income=1101331, loan_amount=10000, employed=True, has_collateral=True, bankruptcy_history=False
+    T10 [llm       ] [OK]  credit_score=603, annual_income=1751282, loan_amount=1131817, employed=True, has_collateral=True, bankruptcy_history=False
+    T11 [llm       ] [OK]  credit_score=650, annual_income=200000, loan_amount=400000, employed=True, has_collateral=False, bankruptcy_history=False
+    T12 [llm       ] [OK]  credit_score=650, annual_income=1543991, loan_amount=9327336, employed=True, has_collateral=False, bankruptcy_history=False
+    T13 [llm       ] [OK]  credit_score=592, annual_income=789452, loan_amount=7386805, employed=True, has_collateral=False, bankruptcy_history=False
+    T14 [llm       ] [OK]  credit_score=650, annual_income=1500000, loan_amount=400000, employed=True, has_collateral=False, bankruptcy_history=False
+Run 2: 收斂=False, 覆蓋率=50.0%, 迭代=14, 有效比=14/14=100.0%
+    T01 [llm       ] [OK]  credit_score=580, annual_income=155854, loan_amount=5000, employed=True, has_collateral=True, bankruptcy_history=False
+    T02 [llm       ] [OK]  credit_score=436, annual_income=1611519, loan_amount=1909184, employed=True, has_collateral=True, bankruptcy_history=True
+    T03 [llm       ] [OK]  credit_score=650, annual_income=2000000, loan_amount=300000, employed=True, has_collateral=False, bankruptcy_history=False
+    T04 [llm       ] [OK]  credit_score=849, annual_income=917182, loan_amount=10000, employed=True, has_collateral=True, bankruptcy_history=False
+    T05 [llm       ] [OK]  credit_score=606, annual_income=1400061, loan_amount=8275242, employed=True, has_collateral=True, bankruptcy_history=False
+    T06 [llm       ] [OK]  credit_score=596, annual_income=878656, loan_amount=400754, employed=True, has_collateral=False, bankruptcy_history=True
+    T07 [llm       ] [OK]  credit_score=404, annual_income=788245, loan_amount=15000, employed=True, has_collateral=True, bankruptcy_history=False
+    T08 [llm       ] [OK]  credit_score=750, annual_income=45000, loan_amount=200000, employed=True, has_collateral=False, bankruptcy_history=False
+    T09 [llm       ] [OK]  credit_score=750, annual_income=120000, loan_amount=300000, employed=True, has_collateral=False, bankruptcy_history=False
+    T10 [llm       ] [OK]  credit_score=522, annual_income=1637295, loan_amount=6772411, employed=True, has_collateral=False, bankruptcy_history=False
+    T11 [llm       ] [OK]  credit_score=700, annual_income=50000, loan_amount=1149653, employed=True, has_collateral=False, bankruptcy_history=False
+    T12 [llm       ] [OK]  credit_score=725, annual_income=45000, loan_amount=200000, employed=True, has_collateral=False, bankruptcy_history=False
+    T13 [llm       ] [OK]  credit_score=698, annual_income=1825229, loan_amount=5538206, employed=False, has_collateral=False, bankruptcy_history=False
+    T14 [llm       ] [OK]  credit_score=482, annual_income=1645395, loan_amount=936092, employed=True, has_collateral=True, bankruptcy_history=False
+Run 3: 收斂=False, 覆蓋率=50.0%, 迭代=14, 有效比=14/14=100.0%
+    T01 [llm       ] [OK]  credit_score=613, annual_income=1754303, loan_amount=4243561, employed=True, has_collateral=False, bankruptcy_history=False
+    T02 [llm       ] [OK]  credit_score=542, annual_income=1228110, loan_amount=100000, employed=True, has_collateral=True, bankruptcy_history=False
+    T03 [llm       ] [OK]  credit_score=419, annual_income=181837, loan_amount=2336626, employed=True, has_collateral=True, bankruptcy_history=False
+    T04 [llm       ] [OK]  credit_score=750, annual_income=60000, loan_amount=200000, employed=True, has_collateral=False, bankruptcy_history=False
+    T05 [llm       ] [OK]  credit_score=700, annual_income=1690085, loan_amount=500000, employed=True, has_collateral=False, bankruptcy_history=False
+    T06 [llm       ] [OK]  credit_score=594, annual_income=475674, loan_amount=600000, employed=True, has_collateral=True, bankruptcy_history=False
+    T07 [llm       ] [OK]  credit_score=610, annual_income=1876451, loan_amount=5367234, employed=True, has_collateral=False, bankruptcy_history=False
+    T08 [llm       ] [OK]  credit_score=720, annual_income=45000, loan_amount=200000, employed=True, has_collateral=False, bankruptcy_history=False
+    T09 [llm       ] [OK]  credit_score=600, annual_income=453043, loan_amount=9494226, employed=False, has_collateral=False, bankruptcy_history=False
+    T10 [llm       ] [OK]  credit_score=650, annual_income=30000, loan_amount=10000, employed=True, has_collateral=True, bankruptcy_history=False
+    T11 [llm       ] [OK]  credit_score=754, annual_income=1859183, loan_amount=50000, employed=True, has_collateral=True, bankruptcy_history=False
+    T12 [llm       ] [OK]  credit_score=384, annual_income=1487269, loan_amount=6537550, employed=False, has_collateral=False, bankruptcy_history=False
+    T13 [llm       ] [OK]  credit_score=631, annual_income=45000, loan_amount=80420, employed=True, has_collateral=False, bankruptcy_history=False
+    T14 [llm       ] [OK]  credit_score=473, annual_income=1116027, loan_amount=600000, employed=True, has_collateral=True, bankruptcy_history=False
+
+=======================================================
+實驗組：IFL      [貸款審核 loan_approval（k=6）]
+=======================================================
+Run 1: 收斂=True, 覆蓋率=100.0%, 迭代=4, 有效比=4/4=100.0%
+    [loss]       [12, 10, 6, 4, 0]
+    T01 [random    ] [OK]  credit_score=685, annual_income=1127286, loan_amount=8481293, has_collateral=True, employed=False, bankruptcy_history=False
+    T02 [random    ] [OK]  credit_score=678, annual_income=355636, loan_amount=4557107, has_collateral=False, employed=True, bankruptcy_history=True
+    T03 [random    ] [OK]  credit_score=639, annual_income=122551, loan_amount=251949, has_collateral=True, employed=True, bankruptcy_history=True
+    T04 [llm       ] [OK]  credit_score=705, annual_income=8, loan_amount=10005, employed=True, has_collateral=True, bankruptcy_history=False
+    T05 [llm       ] [OK]  credit_score=305, annual_income=50005, loan_amount=10005, has_collateral=True, employed=True, bankruptcy_history=False
+    T06 [llm       ] [OK]  credit_score=305, annual_income=50005, loan_amount=10005, has_collateral=False, employed=True, bankruptcy_history=False
+    T07 [llm       ] [OK]  credit_score=305, annual_income=50005, loan_amount=500008, has_collateral=True, employed=True, bankruptcy_history=False
+Run 2: 收斂=True, 覆蓋率=100.0%, 迭代=6, 有效比=6/6=100.0%
+    [loss]       [12, 10, 8, 6, 4, 2, 0]
+    T01 [random    ] [OK]  credit_score=830, annual_income=374416, loan_amount=8067785, has_collateral=True, employed=True, bankruptcy_history=True
+    T02 [random    ] [OK]  credit_score=843, annual_income=990552, loan_amount=9657603, has_collateral=False, employed=True, bankruptcy_history=True
+    T03 [random    ] [OK]  credit_score=470, annual_income=285402, loan_amount=9245974, has_collateral=False, employed=False, bankruptcy_history=False
+    T04 [llm       ] [OK]  credit_score=705, annual_income=8, loan_amount=10005, has_collateral=True, employed=True, bankruptcy_history=False
+    T05 [llm       ] [OK]  credit_score=305, annual_income=50005, loan_amount=10005, has_collateral=True, employed=True, bankruptcy_history=False
+    T06 [llm       ] [OK]  credit_score=305, annual_income=50005, loan_amount=10005, has_collateral=False, employed=True, bankruptcy_history=False
+    T07 [llm       ] [OK]  credit_score=305, annual_income=50005, loan_amount=500007, has_collateral=True, employed=True, bankruptcy_history=False
+    T08 [llm       ] [OK]  credit_score=705, annual_income=8, loan_amount=10005, has_collateral=True, employed=True, bankruptcy_history=False
+    T09 [llm       ] [OK]  credit_score=705, annual_income=9, loan_amount=10005, has_collateral=False, employed=True, bankruptcy_history=False
+Run 3: 收斂=True, 覆蓋率=100.0%, 迭代=5, 有效比=5/5=100.0%
+    [loss]       [10, 8, 6, 4, 2, 0]
+    T01 [random    ] [OK]  credit_score=591, annual_income=1479283, loan_amount=4601085, has_collateral=True, employed=True, bankruptcy_history=True
+    T02 [random    ] [OK]  credit_score=372, annual_income=1187300, loan_amount=4075676, has_collateral=True, employed=True, bankruptcy_history=False
+    T03 [random    ] [OK]  credit_score=681, annual_income=1367318, loan_amount=9759681, has_collateral=True, employed=True, bankruptcy_history=False
+    T04 [llm       ] [OK]  credit_score=705, annual_income=8, loan_amount=10005, has_collateral=True, employed=True, bankruptcy_history=False
+    T05 [llm       ] [OK]  credit_score=305, annual_income=50005, loan_amount=10005, has_collateral=False, employed=True, bankruptcy_history=False
+    T06 [llm       ] [OK]  credit_score=705, annual_income=8, loan_amount=10005, has_collateral=False, employed=True, bankruptcy_history=False
+    T07 [llm       ] [OK]  credit_score=305, annual_income=50005, loan_amount=500007, has_collateral=True, employed=True, bankruptcy_history=False
+    T08 [llm       ] [OK]  credit_score=705, annual_income=9, loan_amount=10005, has_collateral=True, employed=True, bankruptcy_history=False
+
+=================================================================
+【貸款審核 loan_approval（k=6）】指標彙整（3 次平均）
+=================================================================
+指標                           對照A 純隨機      對照B 純LLM       實驗組 IFL
+-----------------------------------------------------------------
+① MC/DC 覆蓋率                    5.6%        44.4%       100.0%
+① 收斂率                          0.0%         0.0%       100.0%
+② 迭代次數                          0.0         14.0          5.0
+③ 有效生成比                      100.0%       100.0%       100.0%
+Token 消耗                          0          533          168
+
+=================================================================
+【貸款審核 loan_approval（k=6）】驗收條件（實驗組 IFL）
+=================================================================
+① MC/DC 覆蓋率 = 100%：PASS (100.0%)
+② 迭代次數 <= 25：PASS (5.0 次)
+③ 有效生成比 >= 85%：PASS (100.0%)
+   收斂率：100.0% (3/3)
+
+
+############################################################
+#  Fixture：手術風險 surgery_risk（k=9）
+#  預期 k=9，IFL 最大迭代=45
+############################################################
+
+=======================================================
+對照組A：純隨機  [手術風險 surgery_risk（k=9）]
+=======================================================
+Run 1: 收斂=False, 覆蓋率=0.0%, 迭代=0, 有效比=3/3=100.0%
+    T01 [random    ] [OK]  age=7, obese=True, has_diabetes=True, has_hypertension=False, is_smoker=True, cardiac_history=True, has_copd=True, low_hemoglobin=True, low_platelets=False
+    T02 [random    ] [OK]  age=59, obese=True, has_diabetes=False, has_hypertension=False, is_smoker=False, cardiac_history=False, has_copd=True, low_hemoglobin=True, low_platelets=False
+    T03 [random    ] [OK]  age=59, obese=True, has_diabetes=False, has_hypertension=False, is_smoker=False, cardiac_history=False, has_copd=True, low_hemoglobin=False, low_platelets=True
+Run 2: 收斂=False, 覆蓋率=0.0%, 迭代=0, 有效比=3/3=100.0%
+    T01 [random    ] [OK]  age=47, obese=False, has_diabetes=False, has_hypertension=True, is_smoker=False, cardiac_history=False, has_copd=False, low_hemoglobin=False, low_platelets=True
+    T02 [random    ] [OK]  age=59, obese=True, has_diabetes=False, has_hypertension=False, is_smoker=False, cardiac_history=True, has_copd=True, low_hemoglobin=True, low_platelets=True
+    T03 [random    ] [OK]  age=119, obese=True, has_diabetes=True, has_hypertension=False, is_smoker=True, cardiac_history=False, has_copd=True, low_hemoglobin=False, low_platelets=True
+Run 3: 收斂=False, 覆蓋率=0.0%, 迭代=0, 有效比=3/3=100.0%
+    T01 [random    ] [OK]  age=102, obese=True, has_diabetes=True, has_hypertension=False, is_smoker=True, cardiac_history=True, has_copd=False, low_hemoglobin=True, low_platelets=True
+    T02 [random    ] [OK]  age=22, obese=True, has_diabetes=True, has_hypertension=True, is_smoker=False, cardiac_history=False, has_copd=True, low_hemoglobin=False, low_platelets=True
+    T03 [random    ] [OK]  age=6, obese=True, has_diabetes=False, has_hypertension=True, is_smoker=False, cardiac_history=True, has_copd=False, low_hemoglobin=True, low_platelets=True
+
+=======================================================
+對照組B：純LLM   [手術風險 surgery_risk（k=9）]
+=======================================================
+Run 1: 收斂=False, 覆蓋率=0.0%, 迭代=20, 有效比=20/20=100.0%
+    T01 [llm       ] [OK]  age=56, obese=False, has_diabetes=False, has_hypertension=False, is_smoker=False, low_hemoglobin=False, low_platelets=False, cardiac_history=False, has_copd=False
+    T02 [llm       ] [OK]  age=50, obese=False, has_diabetes=False, has_hypertension=False, is_smoker=True, low_hemoglobin=False, low_platelets=False, cardiac_history=False, has_copd=True
+    T03 [llm       ] [OK]  age=90, obese=False, has_diabetes=True, has_hypertension=True, is_smoker=False, low_hemoglobin=False, low_platelets=True, cardiac_history=True, has_copd=False
+    T04 [llm       ] [OK]  age=75, obese=True, has_diabetes=True, has_hypertension=True, is_smoker=False, low_hemoglobin=True, low_platelets=False, cardiac_history=False, has_copd=True
+    T05 [llm       ] [OK]  age=118, obese=False, has_diabetes=True, has_hypertension=True, is_smoker=False, low_hemoglobin=False, low_platelets=True, cardiac_history=True, has_copd=False
+    T06 [llm       ] [OK]  age=75, obese=True, has_diabetes=True, has_hypertension=True, is_smoker=False, low_hemoglobin=False, low_platelets=True, cardiac_history=True, has_copd=False
+    T07 [llm       ] [OK]  age=25, obese=False, has_diabetes=False, has_hypertension=False, is_smoker=False, low_hemoglobin=False, low_platelets=False, cardiac_history=False, has_copd=False
+    T08 [llm       ] [OK]  age=65, obese=False, has_diabetes=True, has_hypertension=True, is_smoker=True, low_hemoglobin=True, low_platelets=False, cardiac_history=False, has_copd=False
+    T09 [llm       ] [OK]  age=50, obese=False, has_diabetes=True, has_hypertension=True, is_smoker=True, low_hemoglobin=True, low_platelets=False, cardiac_history=True, has_copd=True
+    T10 [llm       ] [OK]  age=53, obese=False, has_diabetes=False, has_hypertension=False, is_smoker=False, low_hemoglobin=False, low_platelets=False, cardiac_history=False, has_copd=False
+    T11 [llm       ] [OK]  age=72, obese=True, has_diabetes=True, has_hypertension=True, is_smoker=False, low_hemoglobin=True, low_platelets=False, cardiac_history=True, has_copd=False
+    T12 [llm       ] [OK]  age=14, obese=False, has_diabetes=False, has_hypertension=False, is_smoker=True, low_hemoglobin=False, low_platelets=False, cardiac_history=False, has_copd=True
+    T13 [llm       ] [OK]  age=99, obese=False, has_diabetes=True, has_hypertension=True, is_smoker=False, low_hemoglobin=False, low_platelets=True, cardiac_history=True, has_copd=False
+    T14 [llm       ] [OK]  age=45, obese=False, has_diabetes=True, has_hypertension=False, is_smoker=False, low_hemoglobin=True, low_platelets=False, cardiac_history=False, has_copd=False
+    T15 [llm       ] [OK]  age=46, obese=False, has_diabetes=True, has_hypertension=False, is_smoker=False, low_hemoglobin=True, low_platelets=False, cardiac_history=False, has_copd=False
+    T16 [llm       ] [OK]  age=50, obese=False, has_diabetes=True, has_hypertension=True, is_smoker=False, low_hemoglobin=False, low_platelets=False, cardiac_history=False, has_copd=False
+    T17 [llm       ] [OK]  age=46, obese=False, has_diabetes=True, has_hypertension=True, is_smoker=False, low_hemoglobin=False, low_platelets=False, cardiac_history=False, has_copd=False
+    T18 [llm       ] [OK]  age=47, obese=False, has_diabetes=True, has_hypertension=True, is_smoker=False, low_hemoglobin=False, low_platelets=False, cardiac_history=False, has_copd=False
+    T19 [llm       ] [OK]  age=81, obese=False, has_diabetes=False, has_hypertension=True, is_smoker=False, low_hemoglobin=False, low_platelets=False, cardiac_history=False, has_copd=False
+    T20 [llm       ] [OK]  age=25, obese=False, has_diabetes=False, has_hypertension=False, is_smoker=False, low_hemoglobin=False, low_platelets=False, cardiac_history=False, has_copd=False
+Run 2: 收斂=False, 覆蓋率=11.1%, 迭代=20, 有效比=20/20=100.0%
+    T01 [llm       ] [OK]  age=50, obese=False, has_diabetes=True, has_hypertension=True, is_smoker=False, low_hemoglobin=False, low_platelets=False, cardiac_history=False, has_copd=False
+    T02 [llm       ] [OK]  age=78, obese=False, has_diabetes=True, has_hypertension=False, is_smoker=False, low_hemoglobin=True, low_platelets=False, cardiac_history=False, has_copd=False
+    T03 [llm       ] [OK]  age=63, obese=False, has_diabetes=False, has_hypertension=False, is_smoker=True, low_hemoglobin=False, low_platelets=False, cardiac_history=False, has_copd=True
+    T04 [llm       ] [OK]  age=45, obese=False, has_diabetes=True, has_hypertension=False, is_smoker=False, low_hemoglobin=True, low_platelets=False, cardiac_history=False, has_copd=False
+    T05 [llm       ] [OK]  age=58, obese=False, has_diabetes=False, has_hypertension=False, is_smoker=True, low_hemoglobin=False, low_platelets=False, cardiac_history=False, has_copd=True
+    T06 [llm       ] [OK]  age=61, obese=False, has_diabetes=False, has_hypertension=True, is_smoker=False, low_hemoglobin=False, low_platelets=False, cardiac_history=False, has_copd=False
+    T07 [llm       ] [OK]  age=41, obese=False, has_diabetes=True, has_hypertension=True, is_smoker=False, low_hemoglobin=False, low_platelets=False, cardiac_history=False, has_copd=False
+    T08 [llm       ] [OK]  age=53, obese=True, has_diabetes=True, has_hypertension=True, is_smoker=False, low_hemoglobin=False, low_platelets=True, cardiac_history=True, has_copd=False
+    T09 [llm       ] [OK]  age=46, obese=False, has_diabetes=False, has_hypertension=False, is_smoker=True, low_hemoglobin=False, low_platelets=False, cardiac_history=False, has_copd=True
+    T10 [llm       ] [OK]  age=72, obese=True, has_diabetes=True, has_hypertension=True, is_smoker=False, low_hemoglobin=True, low_platelets=False, cardiac_history=False, has_copd=True
+    T11 [llm       ] [OK]  age=82, obese=False, has_diabetes=False, has_hypertension=False, is_smoker=True, low_hemoglobin=False, low_platelets=False, cardiac_history=True, has_copd=False
+    T12 [llm       ] [OK]  age=48, obese=False, has_diabetes=False, has_hypertension=False, is_smoker=False, low_hemoglobin=False, low_platelets=True, cardiac_history=True, has_copd=False
+    T13 [llm       ] [OK]  age=80, obese=False, has_diabetes=True, has_hypertension=False, is_smoker=False, low_hemoglobin=True, low_platelets=False, cardiac_history=False, has_copd=False
+    T14 [llm       ] [OK]  age=65, obese=False, has_diabetes=True, has_hypertension=True, is_smoker=False, low_hemoglobin=True, low_platelets=False, cardiac_history=True, has_copd=True
+    T15 [llm       ] [OK]  age=98, obese=False, has_diabetes=True, has_hypertension=True, is_smoker=True, low_hemoglobin=False, low_platelets=True, cardiac_history=False, has_copd=True
+    T16 [llm       ] [OK]  age=103, obese=False, has_diabetes=False, has_hypertension=True, is_smoker=False, low_hemoglobin=False, low_platelets=False, cardiac_history=False, has_copd=False
+    T17 [llm       ] [OK]  age=48, obese=False, has_diabetes=True, has_hypertension=True, is_smoker=False, low_hemoglobin=True, low_platelets=True, cardiac_history=True, has_copd=False
+    T18 [llm       ] [OK]  age=61, obese=False, has_diabetes=True, has_hypertension=True, is_smoker=False, low_hemoglobin=False, low_platelets=True, cardiac_history=True, has_copd=False
+    T19 [llm       ] [OK]  age=65, obese=False, has_diabetes=False, has_hypertension=True, is_smoker=False, low_hemoglobin=False, low_platelets=False, cardiac_history=False, has_copd=False
+    T20 [llm       ] [OK]  age=31, obese=False, has_diabetes=False, has_hypertension=True, is_smoker=False, low_hemoglobin=False, low_platelets=False, cardiac_history=False, has_copd=False
+Run 3: 收斂=False, 覆蓋率=11.1%, 迭代=20, 有效比=20/20=100.0%
+    T01 [llm       ] [OK]  age=44, obese=False, has_diabetes=True, has_hypertension=False, is_smoker=False, low_hemoglobin=True, low_platelets=False, cardiac_history=False, has_copd=False
+    T02 [llm       ] [OK]  age=65, obese=False, has_diabetes=True, has_hypertension=True, is_smoker=True, low_hemoglobin=True, low_platelets=False, cardiac_history=False, has_copd=False
+    T03 [llm       ] [OK]  age=83, obese=True, has_diabetes=True, has_hypertension=True, is_smoker=False, low_hemoglobin=True, low_platelets=False, cardiac_history=False, has_copd=True
+    T04 [llm       ] [OK]  age=29, obese=False, has_diabetes=True, has_hypertension=False, is_smoker=False, low_hemoglobin=True, low_platelets=False, cardiac_history=False, has_copd=False
+    T05 [llm       ] [OK]  age=31, obese=False, has_diabetes=True, has_hypertension=False, is_smoker=False, low_hemoglobin=True, low_platelets=False, cardiac_history=False, has_copd=False
+    T06 [llm       ] [OK]  age=61, obese=False, has_diabetes=False, has_hypertension=False, is_smoker=False, low_hemoglobin=False, low_platelets=True, cardiac_history=True, has_copd=False
+    T07 [llm       ] [OK]  age=70, obese=True, has_diabetes=True, has_hypertension=True, is_smoker=True, low_hemoglobin=True, low_platelets=False, cardiac_history=False, has_copd=False
+    T08 [llm       ] [OK]  age=25, obese=False, has_diabetes=False, has_hypertension=False, is_smoker=False, low_hemoglobin=False, low_platelets=False, cardiac_history=False, has_copd=False
+    T09 [llm       ] [OK]  age=41, obese=False, has_diabetes=False, has_hypertension=False, is_smoker=True, low_hemoglobin=False, low_platelets=False, cardiac_history=False, has_copd=True
+    T10 [llm       ] [OK]  age=78, obese=False, has_diabetes=True, has_hypertension=True, is_smoker=False, low_hemoglobin=False, low_platelets=True, cardiac_history=True, has_copd=False
+    T11 [llm       ] [OK]  age=11, obese=False, has_diabetes=False, has_hypertension=False, is_smoker=False, low_hemoglobin=False, low_platelets=False, cardiac_history=False, has_copd=False
+    T12 [llm       ] [OK]  age=22, obese=False, has_diabetes=False, has_hypertension=False, is_smoker=True, low_hemoglobin=False, low_platelets=False, cardiac_history=False, has_copd=True
+    T13 [llm       ] [OK]  age=37, obese=False, has_diabetes=True, has_hypertension=True, is_smoker=False, low_hemoglobin=False, low_platelets=True, cardiac_history=True, has_copd=False
+    T14 [llm       ] [OK]  age=81, obese=False, has_diabetes=True, has_hypertension=True, is_smoker=True, low_hemoglobin=True, low_platelets=False, cardiac_history=False, has_copd=True
+    T15 [llm       ] [OK]  age=54, obese=False, has_diabetes=False, has_hypertension=False, is_smoker=True, low_hemoglobin=False, low_platelets=False, cardiac_history=True, has_copd=False
+    T16 [llm       ] [OK]  age=115, obese=False, has_diabetes=True, has_hypertension=True, is_smoker=False, low_hemoglobin=True, low_platelets=False, cardiac_history=True, has_copd=False
+    T17 [llm       ] [OK]  age=28, obese=False, has_diabetes=False, has_hypertension=False, is_smoker=False, low_hemoglobin=False, low_platelets=False, cardiac_history=False, has_copd=False
+    T18 [llm       ] [OK]  age=70, obese=True, has_diabetes=True, has_hypertension=True, is_smoker=False, low_hemoglobin=True, low_platelets=False, cardiac_history=True, has_copd=False
+    T19 [llm       ] [OK]  age=116, obese=False, has_diabetes=True, has_hypertension=True, is_smoker=True, low_hemoglobin=True, low_platelets=False, cardiac_history=False, has_copd=True
+    T20 [llm       ] [OK]  age=57, obese=False, has_diabetes=False, has_hypertension=False, is_smoker=True, low_hemoglobin=False, low_platelets=False, cardiac_history=True, has_copd=False
+
+=======================================================
+實驗組：IFL      [手術風險 surgery_risk（k=9）]
+=======================================================
+Run 1: 收斂=True, 覆蓋率=100.0%, 迭代=7, 有效比=7/7=100.0%
+    [loss]       [18, 16, 14, 12, 10, 4, 2, 0]
+    T01 [random    ] [OK]  age=69, obese=True, has_diabetes=False, has_hypertension=True, is_smoker=True, cardiac_history=True, has_copd=False, low_hemoglobin=True, low_platelets=False
+    T02 [random    ] [OK]  age=20, obese=True, has_diabetes=False, has_hypertension=True, is_smoker=False, cardiac_history=False, has_copd=True, low_hemoglobin=False, low_platelets=True
+    T03 [random    ] [OK]  age=30, obese=False, has_diabetes=True, has_hypertension=False, is_smoker=True, cardiac_history=True, has_copd=True, low_hemoglobin=True, low_platelets=True
+    T04 [llm       ] [OK]  age=74, obese=False, has_diabetes=True, has_hypertension=True, is_smoker=False, cardiac_history=True, has_copd=False, low_hemoglobin=True, low_platelets=False
+    T05 [llm       ] [OK]  age=9, obese=True, has_diabetes=True, has_hypertension=True, is_smoker=False, cardiac_history=False, has_copd=True, low_hemoglobin=True, low_platelets=False
+    T06 [llm       ] [OK]  age=75, obese=False, has_diabetes=True, has_hypertension=True, is_smoker=False, cardiac_history=False, has_copd=True, low_hemoglobin=True, low_platelets=False
+    T07 [llm       ] [OK]  age=75, obese=False, has_diabetes=True, has_hypertension=True, is_smoker=True, cardiac_history=False, has_copd=False, low_hemoglobin=True, low_platelets=False
+    T08 [llm       ] [OK]  age=75, obese=False, has_diabetes=True, has_hypertension=True, is_smoker=True, cardiac_history=False, has_copd=False, low_hemoglobin=True, low_platelets=False
+    T09 [smt_comp  ] [OK]  age=75, obese=False, has_diabetes=True, has_hypertension=True, is_smoker=False, cardiac_history=False, has_copd=False, low_hemoglobin=True, low_platelets=False
+    T10 [llm       ] [OK]  age=74, obese=False, has_diabetes=True, has_hypertension=True, is_smoker=True, cardiac_history=False, has_copd=False, low_hemoglobin=True, low_platelets=False
+    T11 [llm       ] [OK]  age=75, obese=False, has_diabetes=True, has_hypertension=True, is_smoker=False, cardiac_history=False, has_copd=True, low_hemoglobin=False, low_platelets=True
+Run 2: 收斂=True, 覆蓋率=100.0%, 迭代=7, 有效比=7/7=100.0%
+    [loss]       [18, 16, 14, 12, 10, 4, 2, 0]
+    T01 [random    ] [OK]  age=104, obese=False, has_diabetes=True, has_hypertension=False, is_smoker=True, cardiac_history=True, has_copd=False, low_hemoglobin=False, low_platelets=True
+    T02 [random    ] [OK]  age=80, obese=True, has_diabetes=False, has_hypertension=False, is_smoker=True, cardiac_history=True, has_copd=True, low_hemoglobin=True, low_platelets=False
+    T03 [random    ] [OK]  age=55, obese=False, has_diabetes=False, has_hypertension=True, is_smoker=True, cardiac_history=False, has_copd=True, low_hemoglobin=False, low_platelets=True
+    T04 [llm       ] [OK]  age=75, obese=False, has_diabetes=True, has_hypertension=True, is_smoker=False, low_hemoglobin=True, low_platelets=False, cardiac_history=True, has_copd=False
+    T05 [llm       ] [OK]  age=65, obese=True, has_diabetes=True, has_hypertension=True, is_smoker=True, cardiac_history=False, has_copd=False, low_hemoglobin=True, low_platelets=False
+    T06 [llm       ] [OK]  age=75, obese=False, has_diabetes=True, has_hypertension=True, is_smoker=False, cardiac_history=False, has_copd=True, low_hemoglobin=True, low_platelets=False
+    T07 [llm       ] [OK]  age=72, obese=False, has_diabetes=True, has_hypertension=True, is_smoker=True, cardiac_history=False, has_copd=False, low_hemoglobin=True, low_platelets=False
+    T08 [llm       ] [OK]  age=75, obese=False, has_diabetes=True, has_hypertension=True, is_smoker=True, cardiac_history=False, has_copd=False, low_hemoglobin=True, low_platelets=False
+    T09 [smt_comp  ] [OK]  age=75, obese=False, has_diabetes=True, has_hypertension=True, is_smoker=False, cardiac_history=False, has_copd=False, low_hemoglobin=True, low_platelets=False
+    T10 [llm       ] [OK]  age=75, obese=False, has_diabetes=True, has_hypertension=True, is_smoker=False, cardiac_history=False, has_copd=True, low_hemoglobin=True, low_platelets=False
+    T11 [llm       ] [OK]  age=98, obese=False, has_diabetes=True, has_hypertension=True, is_smoker=True, cardiac_history=False, has_copd=False, low_hemoglobin=False, low_platelets=True
+Run 3: 收斂=True, 覆蓋率=100.0%, 迭代=7, 有效比=7/7=100.0%
+    [loss]       [18, 16, 12, 10, 8, 4, 2, 0]
+    T01 [random    ] [OK]  age=89, obese=False, has_diabetes=False, has_hypertension=True, is_smoker=False, cardiac_history=False, has_copd=False, low_hemoglobin=True, low_platelets=False
+    T02 [random    ] [OK]  age=46, obese=True, has_diabetes=False, has_hypertension=False, is_smoker=False, cardiac_history=True, has_copd=False, low_hemoglobin=False, low_platelets=False
+    T03 [random    ] [OK]  age=6, obese=True, has_diabetes=True, has_hypertension=True, is_smoker=False, cardiac_history=False, has_copd=False, low_hemoglobin=True, low_platelets=False
+    T04 [llm       ] [OK]  age=74, obese=False, has_diabetes=True, has_hypertension=True, is_smoker=True, cardiac_history=False, has_copd=False, low_hemoglobin=True, low_platelets=False
+    T05 [llm       ] [OK]  age=8, obese=True, has_diabetes=True, has_hypertension=True, is_smoker=True, cardiac_history=False, has_copd=False, low_hemoglobin=True, low_platelets=False
+    T06 [llm       ] [OK]  age=98, obese=False, has_diabetes=True, has_hypertension=True, is_smoker=False, low_hemoglobin=True, low_platelets=False, cardiac_history=False, has_copd=True
+    T07 [llm       ] [OK]  age=75, obese=False, has_diabetes=True, has_hypertension=True, is_smoker=False, cardiac_history=False, has_copd=True, low_hemoglobin=True, low_platelets=False
+    T08 [llm       ] [OK]  age=75, obese=False, has_diabetes=True, has_hypertension=True, is_smoker=False, cardiac_history=True, has_copd=False, low_hemoglobin=True, low_platelets=False
+    T09 [smt_comp  ] [OK]  age=75, obese=False, has_diabetes=True, has_hypertension=True, is_smoker=False, cardiac_history=False, has_copd=False, low_hemoglobin=True, low_platelets=False
+    T10 [llm       ] [OK]  age=76, obese=False, has_diabetes=True, has_hypertension=True, is_smoker=False, cardiac_history=False, has_copd=True, low_hemoglobin=True, low_platelets=False
+    T11 [llm       ] [OK]  age=75, obese=False, has_diabetes=True, has_hypertension=True, is_smoker=False, low_hemoglobin=False, low_platelets=True, cardiac_history=False, has_copd=True
+
+=================================================================
+【手術風險 surgery_risk（k=9）】指標彙整（3 次平均）
+=================================================================
+指標                           對照A 純隨機      對照B 純LLM       實驗組 IFL
+-----------------------------------------------------------------
+① MC/DC 覆蓋率                    0.0%         7.4%       100.0%
+① 收斂率                          0.0%         0.0%       100.0%
+② 迭代次數                          0.0         20.0          7.0
+③ 有效生成比                      100.0%       100.0%       100.0%
+Token 消耗                          0          992          339
+
+=================================================================
+【手術風險 surgery_risk（k=9）】驗收條件（實驗組 IFL）
+=================================================================
+① MC/DC 覆蓋率 = 100%：PASS (100.0%)
+② 迭代次數 <= 45：PASS (7.0 次)
+③ 有效生成比 >= 85%：PASS (100.0%)
+   收斂率：100.0% (3/3)
+
+
+############################################################
+#  Fixture：ICU 入住 icu_admission（k=10）
+#  預期 k=10，IFL 最大迭代=55
+############################################################
+
+=======================================================
+對照組A：純隨機  [ICU 入住 icu_admission（k=10）]
+=======================================================
+Run 1: 收斂=False, 覆蓋率=0.0%, 迭代=0, 有效比=3/3=100.0%
+    T01 [random    ] [OK]  age=6, low_bp=True, high_heart_rate=False, high_resp_rate=False, high_temp=True, low_gcs=True, low_oxygen=False, low_urine=False, high_creatinine=True, sepsis=False
+    T02 [random    ] [OK]  age=95, low_bp=True, high_heart_rate=True, high_resp_rate=False, high_temp=True, low_gcs=False, low_oxygen=False, low_urine=False, high_creatinine=True, sepsis=True
+    T03 [random    ] [OK]  age=79, low_bp=True, high_heart_rate=True, high_resp_rate=True, high_temp=True, low_gcs=True, low_oxygen=True, low_urine=False, high_creatinine=True, sepsis=True
+Run 2: 收斂=False, 覆蓋率=0.0%, 迭代=0, 有效比=3/3=100.0%
+    T01 [random    ] [OK]  age=84, low_bp=True, high_heart_rate=False, high_resp_rate=False, high_temp=True, low_gcs=False, low_oxygen=False, low_urine=False, high_creatinine=True, sepsis=True
+    T02 [random    ] [OK]  age=33, low_bp=False, high_heart_rate=False, high_resp_rate=True, high_temp=True, low_gcs=True, low_oxygen=True, low_urine=False, high_creatinine=True, sepsis=False
+    T03 [random    ] [OK]  age=115, low_bp=False, high_heart_rate=False, high_resp_rate=False, high_temp=False, low_gcs=False, low_oxygen=True, low_urine=False, high_creatinine=True, sepsis=False
+Run 3: 收斂=False, 覆蓋率=0.0%, 迭代=0, 有效比=3/3=100.0%
+    T01 [random    ] [OK]  age=64, low_bp=False, high_heart_rate=False, high_resp_rate=True, high_temp=False, low_gcs=True, low_oxygen=True, low_urine=True, high_creatinine=False, sepsis=False
+    T02 [random    ] [OK]  age=5, low_bp=True, high_heart_rate=False, high_resp_rate=True, high_temp=False, low_gcs=True, low_oxygen=True, low_urine=False, high_creatinine=False, sepsis=True
+    T03 [random    ] [OK]  age=120, low_bp=True, high_heart_rate=False, high_resp_rate=True, high_temp=False, low_gcs=False, low_oxygen=True, low_urine=False, high_creatinine=False, sepsis=True
+
+=======================================================
+對照組B：純LLM   [ICU 入住 icu_admission（k=10）]
+=======================================================
+Run 1: 收斂=False, 覆蓋率=0.0%, 迭代=22, 有效比=22/22=100.0%
+    T01 [llm       ] [OK]  age=128, low_bp=False, high_heart_rate=False, high_resp_rate=True, high_temp=False, low_gcs=False, low_oxygen=True, low_urine=False, high_creatinine=False, sepsis=False
+    T02 [llm       ] [OK]  age=45, low_bp=False, high_heart_rate=False, high_resp_rate=False, high_temp=False, low_gcs=False, low_oxygen=False, low_urine=True, high_creatinine=True, sepsis=False
+    T03 [llm       ] [OK]  age=29, low_bp=True, high_heart_rate=True, high_resp_rate=False, high_temp=False, low_gcs=False, low_oxygen=False, low_urine=True, high_creatinine=False, sepsis=False
+    T04 [llm       ] [OK]  age=111, low_bp=True, high_heart_rate=False, high_resp_rate=True, high_temp=False, low_gcs=True, low_oxygen=False, low_urine=True, high_creatinine=True, sepsis=True
+    T05 [llm       ] [OK]  age=39, low_bp=False, high_heart_rate=True, high_resp_rate=True, high_temp=False, low_gcs=False, low_oxygen=True, low_urine=False, high_creatinine=False, sepsis=False
+    T06 [llm       ] [OK]  age=63, low_bp=True, high_heart_rate=True, high_resp_rate=False, high_temp=False, low_gcs=False, low_oxygen=False, low_urine=False, high_creatinine=False, sepsis=False
+    T07 [llm       ] [OK]  age=40, low_bp=False, high_heart_rate=True, high_resp_rate=True, high_temp=False, low_gcs=False, low_oxygen=True, low_urine=False, high_creatinine=False, sepsis=False
+    T08 [llm       ] [OK]  age=122, low_bp=False, high_heart_rate=False, high_resp_rate=True, high_temp=True, low_gcs=False, low_oxygen=False, low_urine=False, high_creatinine=False, sepsis=False
+    T09 [llm       ] [OK]  age=111, low_bp=False, high_heart_rate=False, high_resp_rate=True, high_temp=False, low_gcs=False, low_oxygen=True, low_urine=False, high_creatinine=False, sepsis=False
+    T10 [llm       ] [OK]  age=99, low_bp=False, high_heart_rate=False, high_resp_rate=True, high_temp=True, low_gcs=False, low_oxygen=False, low_urine=False, high_creatinine=False, sepsis=False
+    T11 [llm       ] [OK]  age=17, low_bp=True, high_heart_rate=True, high_resp_rate=True, high_temp=True, low_gcs=True, low_oxygen=True, low_urine=True, high_creatinine=True, sepsis=True
+    T12 [llm       ] [OK]  age=19, low_bp=True, high_heart_rate=True, high_resp_rate=False, high_temp=False, low_gcs=False, low_oxygen=False, low_urine=False, high_creatinine=False, sepsis=False
+    T13 [llm       ] [OK]  age=62, low_bp=False, high_heart_rate=False, high_resp_rate=False, high_temp=False, low_gcs=True, low_oxygen=True, low_urine=False, high_creatinine=False, sepsis=False
+    T14 [llm       ] [OK]  age=56, low_bp=False, high_heart_rate=False, high_resp_rate=False, high_temp=False, low_gcs=False, low_oxygen=False, low_urine=False, high_creatinine=False, sepsis=False
+    T15 [llm       ] [OK]  age=96, low_bp=True, high_heart_rate=False, high_resp_rate=False, high_temp=False, low_gcs=False, low_oxygen=True, low_urine=False, high_creatinine=False, sepsis=False
+    T16 [llm       ] [OK]  age=64, low_bp=False, high_heart_rate=True, high_resp_rate=False, high_temp=True, low_gcs=False, low_oxygen=False, low_urine=False, high_creatinine=False, sepsis=True
+    T17 [llm       ] [OK]  age=114, low_bp=False, high_heart_rate=False, high_resp_rate=True, high_temp=False, low_gcs=False, low_oxygen=True, low_urine=False, high_creatinine=False, sepsis=False
+    T18 [llm       ] [OK]  age=126, low_bp=False, high_heart_rate=True, high_resp_rate=True, high_temp=True, low_gcs=False, low_oxygen=False, low_urine=False, high_creatinine=False, sepsis=False
+    T19 [llm       ] [OK]  age=35, low_bp=False, high_heart_rate=False, high_resp_rate=False, high_temp=False, low_gcs=False, low_oxygen=False, low_urine=False, high_creatinine=False, sepsis=False
+    T20 [llm       ] [OK]  age=17, low_bp=True, high_heart_rate=True, high_resp_rate=True, high_temp=True, low_gcs=True, low_oxygen=True, low_urine=True, high_creatinine=True, sepsis=True
+    T21 [llm       ] [OK]  age=70, low_bp=True, high_heart_rate=False, high_resp_rate=False, high_temp=False, low_gcs=False, low_oxygen=True, low_urine=False, high_creatinine=False, sepsis=False
+    T22 [llm       ] [OK]  age=45, low_bp=False, high_heart_rate=False, high_resp_rate=False, high_temp=False, low_gcs=False, low_oxygen=False, low_urine=True, high_creatinine=True, sepsis=False
+Run 2: 收斂=False, 覆蓋率=10.0%, 迭代=22, 有效比=22/22=100.0%
+    T01 [llm       ] [OK]  age=17, low_bp=True, high_heart_rate=True, high_resp_rate=True, high_temp=True, low_gcs=True, low_oxygen=True, low_urine=True, high_creatinine=True, sepsis=True
+    T02 [llm       ] [OK]  age=55, low_bp=False, high_heart_rate=False, high_resp_rate=False, high_temp=False, low_gcs=True, low_oxygen=True, low_urine=False, high_creatinine=False, sepsis=False
+    T03 [llm       ] [OK]  age=80, low_bp=False, high_heart_rate=False, high_resp_rate=True, high_temp=False, low_gcs=False, low_oxygen=True, low_urine=False, high_creatinine=False, sepsis=False
+    T04 [llm       ] [OK]  age=95, low_bp=True, high_heart_rate=True, high_resp_rate=False, high_temp=False, low_gcs=False, low_oxygen=False, low_urine=True, high_creatinine=False, sepsis=False
+    T05 [llm       ] [OK]  age=58, low_bp=False, high_heart_rate=True, high_resp_rate=True, high_temp=False, low_gcs=False, low_oxygen=True, low_urine=True, high_creatinine=True, sepsis=True
+    T06 [llm       ] [OK]  age=4, low_bp=False, high_heart_rate=False, high_resp_rate=True, high_temp=True, low_gcs=False, low_oxygen=False, low_urine=False, high_creatinine=False, sepsis=False
+    T07 [llm       ] [OK]  age=0, low_bp=True, high_heart_rate=True, high_resp_rate=True, high_temp=True, low_gcs=True, low_oxygen=True, low_urine=True, high_creatinine=True, sepsis=True
+    T08 [llm       ] [OK]  age=17, low_bp=True, high_heart_rate=False, high_resp_rate=True, high_temp=False, low_gcs=True, low_oxygen=False, low_urine=True, high_creatinine=False, sepsis=False
+    T09 [llm       ] [OK]  age=27, low_bp=True, high_heart_rate=True, high_resp_rate=True, high_temp=False, low_gcs=True, low_oxygen=False, low_urine=True, high_creatinine=True, sepsis=True
+    T10 [llm       ] [OK]  age=45, low_bp=False, high_heart_rate=True, high_resp_rate=False, high_temp=False, low_gcs=False, low_oxygen=False, low_urine=True, high_creatinine=True, sepsis=False
+    T11 [llm       ] [OK]  age=64, low_bp=True, high_heart_rate=True, high_resp_rate=False, high_temp=False, low_gcs=False, low_oxygen=False, low_urine=False, high_creatinine=False, sepsis=False
+    T12 [llm       ] [OK]  age=15, low_bp=True, high_heart_rate=True, high_resp_rate=True, high_temp=True, low_gcs=True, low_oxygen=True, low_urine=True, high_creatinine=True, sepsis=True
+    T13 [llm       ] [OK]  age=65, low_bp=True, high_heart_rate=False, high_resp_rate=False, high_temp=False, low_gcs=False, low_oxygen=True, low_urine=False, high_creatinine=False, sepsis=True
+    T14 [llm       ] [OK]  age=88, low_bp=False, high_heart_rate=False, high_resp_rate=False, high_temp=False, low_gcs=False, low_oxygen=False, low_urine=False, high_creatinine=False, sepsis=False
+    T15 [llm       ] [OK]  age=27, low_bp=True, high_heart_rate=True, high_resp_rate=True, high_temp=True, low_gcs=True, low_oxygen=True, low_urine=True, high_creatinine=True, sepsis=True
+    T16 [llm       ] [OK]  age=11, low_bp=False, high_heart_rate=True, high_resp_rate=False, high_temp=True, low_gcs=False, low_oxygen=False, low_urine=False, high_creatinine=False, sepsis=True
+    T17 [llm       ] [OK]  age=95, low_bp=True, high_heart_rate=True, high_resp_rate=False, high_temp=False, low_gcs=True, low_oxygen=False, low_urine=False, high_creatinine=True, sepsis=False
+    T18 [llm       ] [OK]  age=37, low_bp=False, high_heart_rate=False, high_resp_rate=True, high_temp=False, low_gcs=False, low_oxygen=True, low_urine=False, high_creatinine=False, sepsis=False
+    T19 [llm       ] [OK]  age=26, low_bp=False, high_heart_rate=True, high_resp_rate=True, high_temp=False, low_gcs=False, low_oxygen=True, low_urine=False, high_creatinine=False, sepsis=False
+    T20 [llm       ] [OK]  age=25, low_bp=False, high_heart_rate=True, high_resp_rate=False, high_temp=True, low_gcs=False, low_oxygen=False, low_urine=False, high_creatinine=False, sepsis=True
+    T21 [llm       ] [OK]  age=17, low_bp=False, high_heart_rate=False, high_resp_rate=False, high_temp=False, low_gcs=True, low_oxygen=True, low_urine=False, high_creatinine=False, sepsis=False
+    T22 [llm       ] [OK]  age=56, low_bp=True, high_heart_rate=True, high_resp_rate=False, high_temp=False, low_gcs=False, low_oxygen=False, low_urine=True, high_creatinine=False, sepsis=False
+Run 3: 收斂=False, 覆蓋率=0.0%, 迭代=22, 有效比=22/22=100.0%
+    T01 [llm       ] [OK]  age=17, low_bp=False, high_heart_rate=False, high_resp_rate=False, high_temp=False, low_gcs=False, low_oxygen=False, low_urine=False, high_creatinine=False, sepsis=False
+    T02 [llm       ] [OK]  age=4, low_bp=True, high_heart_rate=True, high_resp_rate=False, high_temp=False, low_gcs=False, low_oxygen=False, low_urine=False, high_creatinine=False, sepsis=False
+    T03 [llm       ] [OK]  age=66, low_bp=False, high_heart_rate=False, high_resp_rate=False, high_temp=False, low_gcs=False, low_oxygen=False, low_urine=False, high_creatinine=False, sepsis=False
+    T04 [llm       ] [OK]  age=107, low_bp=False, high_heart_rate=False, high_resp_rate=True, high_temp=False, low_gcs=False, low_oxygen=True, low_urine=False, high_creatinine=False, sepsis=False
+    T05 [llm       ] [OK]  age=17, low_bp=True, high_heart_rate=True, high_resp_rate=True, high_temp=True, low_gcs=True, low_oxygen=True, low_urine=True, high_creatinine=True, sepsis=True
+    T06 [llm       ] [OK]  age=52, low_bp=False, high_heart_rate=True, high_resp_rate=True, high_temp=False, low_gcs=False, low_oxygen=True, low_urine=False, high_creatinine=False, sepsis=False
+    T07 [llm       ] [OK]  age=25, low_bp=False, high_heart_rate=True, high_resp_rate=False, high_temp=True, low_gcs=False, low_oxygen=False, low_urine=False, high_creatinine=False, sepsis=True
+    T08 [llm       ] [OK]  age=52, low_bp=False, high_heart_rate=False, high_resp_rate=True, high_temp=True, low_gcs=False, low_oxygen=True, low_urine=False, high_creatinine=False, sepsis=False
+    T09 [llm       ] [OK]  age=79, low_bp=True, high_heart_rate=False, high_resp_rate=True, high_temp=False, low_gcs=False, low_oxygen=True, low_urine=True, high_creatinine=True, sepsis=True
+    T10 [llm       ] [OK]  age=63, low_bp=True, high_heart_rate=True, high_resp_rate=True, high_temp=False, low_gcs=True, low_oxygen=True, low_urine=True, high_creatinine=False, sepsis=False
+    T11 [llm       ] [OK]  age=54, low_bp=True, high_heart_rate=True, high_resp_rate=False, high_temp=False, low_gcs=False, low_oxygen=False, low_urine=True, high_creatinine=False, sepsis=False
+    T12 [llm       ] [OK]  age=94, low_bp=False, high_heart_rate=False, high_resp_rate=True, high_temp=True, low_gcs=False, low_oxygen=False, low_urine=False, high_creatinine=False, sepsis=False
+    T13 [llm       ] [OK]  age=106, low_bp=True, high_heart_rate=False, high_resp_rate=False, high_temp=False, low_gcs=False, low_oxygen=True, low_urine=False, high_creatinine=False, sepsis=False
+    T14 [llm       ] [OK]  age=10, low_bp=False, high_heart_rate=True, high_resp_rate=False, high_temp=True, low_gcs=False, low_oxygen=False, low_urine=False, high_creatinine=False, sepsis=True
+    T15 [llm       ] [OK]  age=90, low_bp=False, high_heart_rate=True, high_resp_rate=False, high_temp=False, low_gcs=False, low_oxygen=False, low_urine=True, high_creatinine=True, sepsis=False
+    T16 [llm       ] [OK]  age=47, low_bp=False, high_heart_rate=False, high_resp_rate=True, high_temp=False, low_gcs=False, low_oxygen=True, low_urine=False, high_creatinine=False, sepsis=False
+    T17 [llm       ] [OK]  age=45, low_bp=False, high_heart_rate=True, high_resp_rate=True, high_temp=False, low_gcs=False, low_oxygen=False, low_urine=True, high_creatinine=True, sepsis=False
+    T18 [llm       ] [OK]  age=92, low_bp=False, high_heart_rate=False, high_resp_rate=False, high_temp=False, low_gcs=False, low_oxygen=False, low_urine=False, high_creatinine=False, sepsis=False
+    T19 [llm       ] [OK]  age=106, low_bp=False, high_heart_rate=True, high_resp_rate=False, high_temp=True, low_gcs=False, low_oxygen=False, low_urine=False, high_creatinine=False, sepsis=True
+    T20 [llm       ] [OK]  age=74, low_bp=True, high_heart_rate=False, high_resp_rate=True, high_temp=False, low_gcs=False, low_oxygen=True, low_urine=True, high_creatinine=True, sepsis=True
+    T21 [llm       ] [OK]  age=109, low_bp=True, high_heart_rate=False, high_resp_rate=False, high_temp=False, low_gcs=False, low_oxygen=True, low_urine=False, high_creatinine=False, sepsis=False
+    T22 [llm       ] [OK]  age=70, low_bp=True, high_heart_rate=False, high_resp_rate=False, high_temp=False, low_gcs=False, low_oxygen=True, low_urine=False, high_creatinine=False, sepsis=False
+
+=======================================================
+實驗組：IFL      [ICU 入住 icu_admission（k=10）]
+=======================================================
+Run 1: 收斂=True, 覆蓋率=100.0%, 迭代=9, 有效比=9/9=100.0%
+    [loss]       [20, 18, 16, 14, 12, 10, 8, 6, 2, 0]
+    T01 [random    ] [OK]  age=56, low_bp=True, high_heart_rate=False, high_resp_rate=True, high_temp=False, low_gcs=True, low_oxygen=True, low_urine=True, high_creatinine=False, sepsis=True
+    T02 [random    ] [OK]  age=51, low_bp=True, high_heart_rate=False, high_resp_rate=True, high_temp=False, low_gcs=False, low_oxygen=True, low_urine=True, high_creatinine=False, sepsis=False
+    T03 [random    ] [OK]  age=9, low_bp=False, high_heart_rate=False, high_resp_rate=True, high_temp=True, low_gcs=False, low_oxygen=True, low_urine=True, high_creatinine=False, sepsis=True
+    T04 [llm       ] [OK]  age=23, low_bp=True, high_heart_rate=False, high_resp_rate=True, high_temp=False, low_gcs=True, low_oxygen=False, low_urine=True, high_creatinine=False, sepsis=False
+    T05 [llm       ] [OK]  age=24, low_bp=True, high_heart_rate=False, high_resp_rate=True, high_temp=False, low_gcs=True, low_oxygen=False, low_urine=True, high_creatinine=False, sepsis=False
+    T06 [llm       ] [OK]  age=22, low_bp=False, high_heart_rate=True, high_resp_rate=True, high_temp=False, low_gcs=True, low_oxygen=False, low_urine=False, high_creatinine=True, sepsis=False
+    T07 [llm       ] [OK]  age=23, low_bp=True, high_heart_rate=False, high_resp_rate=True, high_temp=False, low_gcs=True, low_oxygen=False, low_urine=False, high_creatinine=True, sepsis=False
+    T08 [llm       ] [OK]  age=25, low_bp=True, high_heart_rate=False, high_resp_rate=False, high_temp=True, low_gcs=True, low_oxygen=False, low_urine=True, high_creatinine=False, sepsis=False
+    T09 [llm       ] [OK]  age=23, low_bp=True, high_heart_rate=False, high_resp_rate=True, high_temp=False, low_gcs=True, low_oxygen=False, low_urine=False, high_creatinine=True, sepsis=False
+    T10 [llm       ] [OK]  age=24, low_bp=True, high_heart_rate=False, high_resp_rate=True, high_temp=False, low_gcs=False, low_oxygen=True, low_urine=False, high_creatinine=True, sepsis=False
+    T11 [llm       ] [OK]  age=23, low_bp=True, high_heart_rate=False, high_resp_rate=True, high_temp=False, low_gcs=True, low_oxygen=False, low_urine=True, high_creatinine=False, sepsis=False
+    T12 [smt_comp  ] [OK]  age=23, low_bp=True, high_heart_rate=False, high_resp_rate=True, high_temp=False, low_gcs=True, low_oxygen=False, low_urine=False, high_creatinine=False, sepsis=False
+    T13 [llm       ] [OK]  age=24, low_bp=True, high_heart_rate=False, high_resp_rate=True, high_temp=False, low_gcs=True, low_oxygen=False, low_urine=False, high_creatinine=False, sepsis=True
+Run 2: 收斂=True, 覆蓋率=100.0%, 迭代=8, 有效比=8/8=100.0%
+    [loss]       [20, 18, 14, 12, 10, 8, 6, 2, 0]
+    T01 [random    ] [OK]  age=48, low_bp=False, high_heart_rate=False, high_resp_rate=False, high_temp=True, low_gcs=True, low_oxygen=True, low_urine=False, high_creatinine=False, sepsis=False
+    T02 [random    ] [OK]  age=85, low_bp=True, high_heart_rate=True, high_resp_rate=False, high_temp=True, low_gcs=False, low_oxygen=True, low_urine=True, high_creatinine=False, sepsis=False
+    T03 [random    ] [OK]  age=9, low_bp=False, high_heart_rate=False, high_resp_rate=False, high_temp=False, low_gcs=True, low_oxygen=False, low_urine=True, high_creatinine=False, sepsis=False
+    T04 [llm       ] [OK]  age=23, low_bp=False, high_heart_rate=True, high_resp_rate=True, high_temp=False, low_gcs=True, low_oxygen=False, low_urine=False, high_creatinine=True, sepsis=False
+    T05 [llm       ] [OK]  age=24, low_bp=True, high_heart_rate=False, high_resp_rate=True, high_temp=False, low_gcs=True, low_oxygen=False, low_urine=False, high_creatinine=True, sepsis=False
+    T06 [smt_comp  ] [OK]  age=24, low_bp=False, high_heart_rate=False, high_resp_rate=True, high_temp=False, low_gcs=True, low_oxygen=False, low_urine=False, high_creatinine=True, sepsis=False
+    T07 [llm       ] [OK]  age=24, low_bp=True, high_heart_rate=False, high_resp_rate=True, high_temp=False, low_gcs=True, low_oxygen=False, low_urine=False, high_creatinine=True, sepsis=False
+    T08 [llm       ] [OK]  age=23, low_bp=False, high_heart_rate=True, high_resp_rate=False, high_temp=True, low_gcs=True, low_oxygen=False, low_urine=False, high_creatinine=True, sepsis=False
+    T09 [llm       ] [OK]  age=25, low_bp=False, high_heart_rate=True, high_resp_rate=True, high_temp=False, low_gcs=True, low_oxygen=False, low_urine=True, high_creatinine=False, sepsis=False
+    T10 [llm       ] [OK]  age=24, low_bp=False, high_heart_rate=True, high_resp_rate=True, high_temp=False, low_gcs=False, low_oxygen=True, low_urine=True, high_creatinine=False, sepsis=False
+    T11 [llm       ] [OK]  age=24, low_bp=False, high_heart_rate=True, high_resp_rate=True, high_temp=False, low_gcs=True, low_oxygen=False, low_urine=True, high_creatinine=False, sepsis=False
+    T12 [smt_comp  ] [OK]  age=24, low_bp=False, high_heart_rate=True, high_resp_rate=True, high_temp=False, low_gcs=True, low_oxygen=False, low_urine=False, high_creatinine=False, sepsis=False
+    T13 [llm       ] [OK]  age=23, low_bp=False, high_heart_rate=True, high_resp_rate=True, high_temp=False, low_gcs=True, low_oxygen=False, low_urine=False, high_creatinine=False, sepsis=True
+Run 3: 收斂=True, 覆蓋率=100.0%, 迭代=9, 有效比=9/9=100.0%
+    [loss]       [20, 18, 16, 14, 12, 10, 8, 6, 2, 0]
+    T01 [random    ] [OK]  age=46, low_bp=True, high_heart_rate=False, high_resp_rate=False, high_temp=True, low_gcs=False, low_oxygen=True, low_urine=False, high_creatinine=False, sepsis=False
+    T02 [random    ] [OK]  age=96, low_bp=False, high_heart_rate=True, high_resp_rate=True, high_temp=True, low_gcs=False, low_oxygen=True, low_urine=True, high_creatinine=False, sepsis=True
+    T03 [random    ] [OK]  age=54, low_bp=True, high_heart_rate=False, high_resp_rate=True, high_temp=True, low_gcs=False, low_oxygen=True, low_urine=True, high_creatinine=True, sepsis=True
+    T04 [llm       ] [OK]  age=23, low_bp=True, high_heart_rate=False, high_resp_rate=True, high_temp=False, low_gcs=True, low_oxygen=False, low_urine=True, high_creatinine=False, sepsis=False
+    T05 [llm       ] [OK]  age=22, low_bp=True, high_heart_rate=False, high_resp_rate=True, high_temp=False, low_gcs=True, low_oxygen=False, low_urine=False, high_creatinine=True, sepsis=False
+    T06 [llm       ] [OK]  age=22, low_bp=False, high_heart_rate=True, high_resp_rate=True, high_temp=False, low_gcs=True, low_oxygen=False, low_urine=True, high_creatinine=False, sepsis=False
+    T07 [llm       ] [OK]  age=24, low_bp=True, high_heart_rate=False, high_resp_rate=True, high_temp=False, low_gcs=True, low_oxygen=False, low_urine=True, high_creatinine=False, sepsis=False
+    T08 [llm       ] [OK]  age=24, low_bp=True, high_heart_rate=False, high_resp_rate=False, high_temp=True, low_gcs=True, low_oxygen=False, low_urine=False, high_creatinine=True, sepsis=False
+    T09 [llm       ] [OK]  age=23, low_bp=True, high_heart_rate=False, high_resp_rate=True, high_temp=False, low_gcs=True, low_oxygen=False, low_urine=True, high_creatinine=False, sepsis=False
+    T10 [llm       ] [OK]  age=25, low_bp=True, high_heart_rate=False, high_resp_rate=True, high_temp=False, low_gcs=False, low_oxygen=True, low_urine=False, high_creatinine=True, sepsis=False
+    T11 [llm       ] [OK]  age=22, low_bp=True, high_heart_rate=False, high_resp_rate=True, high_temp=False, low_gcs=True, low_oxygen=False, low_urine=True, high_creatinine=False, sepsis=False
+    T12 [smt_comp  ] [OK]  age=22, low_bp=True, high_heart_rate=False, high_resp_rate=True, high_temp=False, low_gcs=True, low_oxygen=False, low_urine=False, high_creatinine=False, sepsis=False
+    T13 [llm       ] [OK]  age=24, low_bp=True, high_heart_rate=False, high_resp_rate=True, high_temp=False, low_gcs=True, low_oxygen=False, low_urine=False, high_creatinine=False, sepsis=True
+
+=================================================================
+【ICU 入住 icu_admission（k=10）】指標彙整（3 次平均）
+=================================================================
+指標                           對照A 純隨機      對照B 純LLM       實驗組 IFL
+-----------------------------------------------------------------
+① MC/DC 覆蓋率                    0.0%         3.3%       100.0%
+① 收斂率                          0.0%         0.0%       100.0%
+② 迭代次數                          0.0         22.0          8.7
+③ 有效生成比                      100.0%       100.0%       100.0%
+Token 消耗                          0         1132          443
+
+=================================================================
+【ICU 入住 icu_admission（k=10）】驗收條件（實驗組 IFL）
+=================================================================
+① MC/DC 覆蓋率 = 100%：PASS (100.0%)
+② 迭代次數 <= 55：PASS (8.7 次)
+③ 有效生成比 >= 85%：PASS (100.0%)
+   收斂率：100.0% (3/3)
+
+
+######################################################################
+#  跨 Fixture 比較總表（實驗組 IFL，3 次平均）
+######################################################################
+Fixture                         k       覆蓋率       收斂率      迭代數       有效比    Tokens
+----------------------------------------------------------------------
+  貸款審核 loan_approval            6   100.0%   100.0%      5.0   100.0%       168
+  手術風險 surgery_risk             9   100.0%   100.0%      7.0   100.0%       339
+  ICU 入住 icu_admission         10   100.0%   100.0%      8.7   100.0%       443
+----------------------------------------------------------------------
+（高 k 值時覆蓋率可能因 infeasible 路徑而低於 100%，詳見上方各輪 [infeasible] 紀錄）

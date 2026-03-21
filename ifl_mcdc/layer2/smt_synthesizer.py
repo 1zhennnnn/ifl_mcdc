@@ -126,12 +126,17 @@ class SMTConstraintSynthesizer:
 
     TIMEOUT_MS: int = 10_000  # 10 秒
 
+    def __init__(
+        self,
+        domain_bounds: dict[str, list[int]] | None = None,
+    ) -> None:
+        self.domain_bounds = domain_bounds
+
     def synthesize(
         self,
         decision_node: DecisionNode,
         gap: GapEntry,
         domain_types: dict[str, str],
-        domain_bounds: dict[str, list[int]] | None = None,
     ) -> SMTResult:
         """主方法：合成 Φ_gap 並求解。
 
@@ -139,7 +144,6 @@ class SMTConstraintSynthesizer:
             decision_node: 決策節點。
             gap: 待填補的缺口（condition_id + flip_direction）。
             domain_types: var_name → "int" | "bool" | "float" 的映射。
-            domain_bounds: var_name → [min, max]，用於約束 Z3 整數變數範圍。
 
         Returns:
             SMTResult：SAT 含 model，UNSAT 含 core。
@@ -156,7 +160,7 @@ class SMTConstraintSynthesizer:
         f_expr = ASTToZ3Converter(z3_vars).convert(decision_node)
 
         # 步驟 3：建構 Φ_gap
-        phi_gap = self._build_phi_gap(decision_node, gap, z3_vars, f_expr, domain_types, domain_bounds)
+        phi_gap = self._build_phi_gap(decision_node, gap, z3_vars, f_expr, domain_types)
 
         # 步驟 4：求解
         s = Solver()
@@ -181,46 +185,33 @@ class SMTConstraintSynthesizer:
         if result == sat:
             model = s.model()
             from ifl_mcdc.layer2.bound_extractor import BoundExtractor
-            bound_specs = BoundExtractor().extract(model, z3_vars, domain_types, domain_bounds)
-            # model_completion=True で domain bounds 制約済み変数も具体値を取得
+            bound_specs = BoundExtractor().extract(model, z3_vars, domain_types, self.domain_bounds)
             concrete: dict[str, object] = {
                 var_name: model.eval(z3_var, model_completion=True)
                 for var_name, z3_var in z3_vars.items()
             }
 
-            # 求解互補測試（D=False，目標條件=False，非目標變數固定）
-            target_cond_comp = next(
-                c for c in decision_node.condition_set.conditions
-                if c.cond_id == gap.condition_id
-            )
-            target_z3_comp = ASTToZ3Converter(z3_vars).convert_cond(target_cond_comp)
-            target_var_names = set(target_cond_comp.var_names)
-
+            # 額外計算 False 側（補集）BoundSpec：目標條件=False、決策=False
+            complement_bound_specs = None
+            comp_phi = self._build_complement_phi(decision_node, gap, z3_vars, f_expr, domain_types)
             s_comp = Solver()
-            s_comp.set("timeout", 2000)
-            s_comp.add(f_expr == BoolVal(False))
-            s_comp.add(target_z3_comp == BoolVal(False))
-            # 非目標變數：固定為主解（域約束由主解已保證）
-            # 目標變數：不加域約束，允許超出邊界以實現條件翻轉
-            for var_name, z3_var in z3_vars.items():
-                if var_name not in target_var_names:
-                    model_val = model[z3_var]
-                    if model_val is not None:
-                        s_comp.add(z3_var == model_val)
-
-            comp_concrete: dict[str, object] | None = None
+            s_comp.set("timeout", self.TIMEOUT_MS)
+            s_comp.add(comp_phi)
             try:
                 if s_comp.check() == sat:
-                    comp_model = s_comp.model()
-                    # model_completion=True 確保被 equality 約束的變數也回傳具體值
-                    comp_concrete = {
-                        var_name: comp_model.eval(z3_var, model_completion=True)
-                        for var_name, z3_var in z3_vars.items()
-                    }
+                    complement_bound_specs = BoundExtractor().extract(
+                        s_comp.model(), z3_vars, domain_types, self.domain_bounds
+                    )
             except z3.Z3Exception:
                 pass
 
-            return SMTResult(True, concrete, bound_specs, None, solve_time, comp_concrete)
+            return SMTResult(
+                satisfiable=True,
+                model=concrete,
+                bound_specs=bound_specs,
+                complement_bound_specs=complement_bound_specs,
+                solve_time=solve_time,
+            )
         else:
             # UNSAT：取 unsat core
             s2 = Solver()
@@ -232,7 +223,7 @@ class SMTConstraintSynthesizer:
                 tracked.append(str(p))
             s2.check()
             core = [str(c) for c in s2.unsat_core()]
-            return SMTResult(False, None, None, core, solve_time)
+            return SMTResult(satisfiable=False, core=core, solve_time=solve_time)
 
     def _create_z3_vars(
         self,
@@ -261,7 +252,6 @@ class SMTConstraintSynthesizer:
         z3_vars: dict[str, object],
         f_expr: object,
         domain_types: dict[str, str],
-        domain_bounds: dict[str, list[int]] | None = None,
     ) -> list[object]:
         phi: list[object] = []
         converter = ASTToZ3Converter(z3_vars)
@@ -270,40 +260,240 @@ class SMTConstraintSynthesizer:
             c for c in dn.condition_set.conditions
             if c.cond_id == gap.condition_id
         )
+        target_var_names: set[str] = set(target_cond.var_names)
 
-        # (A) 決策結果為 True（找一個有效的覆蓋案例）
+        # (A) 決策結果為 True（保證整體判定可翻轉，適用任何布林邏輯）
         phi.append(f_expr == BoolVal(True))
 
-        # (B) 目標條件的有效值
-        # F2T：目標條件為 True（這個案例中目標條件成立）
-        # T2F：目標條件為 False（需要另一個案例，此處找 True 的配對）
-        # 實際上我們只需要找「目標條件為 True 且決策為 True」的案例
-        # 配對案例（目標條件 False）由 coverage_engine 從既有案例配對
+        # (B) 目標條件為 True
         target_z3 = converter.convert_cond(target_cond)
-        if gap.flip_direction == "F2T":
-            # 找目標條件為 True 的案例
-            phi.append(target_z3 == BoolVal(True))
-        else:
-            # T2F：找目標條件為 True 的案例（作為配對的 True 端）
-            phi.append(target_z3 == BoolVal(True))
+        phi.append(target_z3 == BoolVal(True))
 
-        # (C) 耦合夥伴約束：只對不共用變數的夥伴施加約束
-        target_vars = set(target_cond.var_names)
-        for other, coupling_type in dn.condition_set.get_coupled(gap.condition_id):
-            # 若夥伴與目標共用變數，跳過（避免矛盾）
-            if set(other.var_names) & target_vars:
-                continue
-            other_z3 = converter.convert_cond(other)
-            if coupling_type == "OR":
-                phi.append(other_z3 == BoolVal(False))
-            else:
-                phi.append(other_z3 == BoolVal(True))
-
-        # (D) int 變數域約束：優先使用 domain_bounds，否則僅約束 >= 0
+        # (C) int 變數域約束：優先使用 self.domain_bounds，否則僅約束 >= 0
         for var_name, z3_var in z3_vars.items():
             if domain_types.get(var_name, "int") == "int":
-                if domain_bounds and var_name in domain_bounds:
-                    lo, hi = domain_bounds[var_name][0], domain_bounds[var_name][1]
+                if self.domain_bounds and var_name in self.domain_bounds:
+                    lo, hi = self.domain_bounds[var_name][0], self.domain_bounds[var_name][1]
+                    phi.append(z3_var >= lo)  # type: ignore[operator]
+                    phi.append(z3_var <= hi)  # type: ignore[operator]
+                else:
+                    phi.append(z3_var >= 0)  # type: ignore[operator]
+
+        # (D) 配對可行性約束：確保 True 側的非目標條件值允許有效 False 側存在
+        #
+        # 為目標條件的變數建立「補集副本」(_c_<var>)，非目標變數共用原始 Z3 變數。
+        # 補集副本須滿足：target_cond=False、所有非目標條件值不變、decision=False。
+        # 這樣 Z3 在選 True 側值時就能保證有可配對的 False 側，
+        # 避免 LLM 選到使補集不可行的值（如 age>=65 缺口時 high_risk=True）。
+        comp_vars: dict[str, object] = {}
+        for var_name in target_var_names:
+            t = domain_types.get(var_name, "int")
+            if t == "bool":
+                comp_vars[var_name] = Bool(f"_c_{var_name}")
+            elif t == "float":
+                comp_vars[var_name] = Real(f"_c_{var_name}")
+            else:
+                comp_vars[var_name] = Int(f"_c_{var_name}")
+
+        # 混合變數映射：目標變數用補集副本，非目標變數共用原始
+        mixed_vars = {**z3_vars, **comp_vars}
+        mixed_converter = ASTToZ3Converter(mixed_vars)
+        f_expr_comp = mixed_converter.convert(dn)
+
+        # 補集副本的目標條件 = False
+        target_z3_comp = mixed_converter.convert_cond(target_cond)
+        phi.append(z3.Not(target_z3_comp))
+
+        # 各非目標條件的值在補集側必須與 True 側相同（用混合變數表達）
+        for cond in dn.condition_set.conditions:
+            if cond.cond_id == gap.condition_id:
+                continue
+            # 若此非目標條件使用了目標變數，需在補集側施加相同約束
+            if not any(v in target_var_names for v in cond.var_names):
+                continue
+            # 該條件使用目標變數（comp var），必須等於原始 True 側條件值
+            # 在 True 側 phi 中，原始 z3_vars 版的此條件已被約束
+            # 在補集側，用混合變數版，讓 Z3 找到同樣滿足的解
+            cond_z3_orig = converter.convert_cond(cond)
+            cond_z3_comp = mixed_converter.convert_cond(cond)
+            phi.append(cond_z3_comp == cond_z3_orig)
+
+        # 補集決策 = False
+        phi.append(z3.Not(f_expr_comp))
+
+        # 補集副本域約束
+        for var_name, z3_var in comp_vars.items():
+            if domain_types.get(var_name, "int") == "int":
+                if self.domain_bounds and var_name in self.domain_bounds:
+                    lo, hi = self.domain_bounds[var_name][0], self.domain_bounds[var_name][1]
+                    phi.append(z3_var >= lo)  # type: ignore[operator]
+                    phi.append(z3_var <= hi)  # type: ignore[operator]
+                else:
+                    phi.append(z3_var >= 0)  # type: ignore[operator]
+
+        return phi
+
+    def synthesize_complement(
+        self,
+        decision_node: DecisionNode,
+        gap: GapEntry,
+        domain_types: dict[str, str],
+        true_side_concrete: dict[str, object],
+    ) -> dict[str, object] | None:
+        """True 側執行後，合成保證有效的 MC/DC False 側測試。
+
+        做法：固定所有「非目標條件的變數」到 True 側的具體值，
+        讓 Z3 只需為目標條件的變數找滿足 target=False & decision=False 的值。
+
+        由於非目標條件的所有變數值完全相同，_others_ok 一定成立，
+        (True 側, False 側) 必然構成有效 MC/DC 配對。
+
+        Args:
+            decision_node: 決策節點。
+            gap: 待填補的缺口。
+            domain_types: var_name → 型別。
+            true_side_concrete: True 側測試的具體輸入值 {var_name → Python value}。
+
+        Returns:
+            Python-native 型別的測試字典，UNSAT 或超時時回傳 None。
+        """
+        z3_vars = self._create_z3_vars(decision_node, domain_types)
+        converter = ASTToZ3Converter(z3_vars)
+        f_expr = converter.convert(decision_node)
+
+        target_cond = next(
+            c for c in decision_node.condition_set.conditions
+            if c.cond_id == gap.condition_id
+        )
+        target_var_names: set[str] = set(target_cond.var_names)
+
+        phi: list[object] = []
+
+        # (A) 決策結果 = False
+        phi.append(z3.Not(f_expr))
+
+        # (B) 目標條件 = False
+        target_z3 = converter.convert_cond(target_cond)
+        phi.append(z3.Not(target_z3))
+
+        # (C) 固定非目標條件的變數為 True 側具體值（確保非目標條件值不變）
+        for var_name, z3_var in z3_vars.items():
+            if var_name in target_var_names:
+                continue
+            true_val = true_side_concrete.get(var_name)
+            if true_val is None:
+                continue
+            var_type = domain_types.get(var_name, "int")
+            if var_type == "bool":
+                phi.append(z3_var == BoolVal(bool(true_val)))
+            else:
+                phi.append(z3_var == int(str(true_val)))
+
+        # (C2) 對使用目標變數的非目標條件，施加其 True 側條件值不變的約束
+        # （由於目標變數在補集中為自由變數，共用目標變數的非目標條件可能改變值）
+        for cond in decision_node.condition_set.conditions:
+            if cond.cond_id == gap.condition_id:
+                continue  # 目標條件跳過（允許改變）
+            if not any(v in target_var_names for v in cond.var_names):
+                continue  # 此條件不使用目標變數，已由 (C) 處理
+            # 計算此條件在 True 側的值
+            try:
+                raw_val = bool(eval(  # noqa: S307
+                    cond.expression,
+                    {"__builtins__": {}},
+                    dict(true_side_concrete),
+                ))
+                cond_true_val = (not raw_val) if cond.negated else raw_val
+            except Exception:  # noqa: BLE001
+                continue
+            # 在補集中，此條件的 Z3 表達式（使用自由目標變數）必須等於 True 側值
+            cond_z3 = converter.convert_cond(cond)
+            phi.append(cond_z3 == BoolVal(cond_true_val))
+
+        # (D) 目標條件變數的域約束
+        for var_name, z3_var in z3_vars.items():
+            if var_name not in target_var_names:
+                continue
+            if domain_types.get(var_name, "int") == "int":
+                if self.domain_bounds and var_name in self.domain_bounds:
+                    lo, hi = self.domain_bounds[var_name][0], self.domain_bounds[var_name][1]
+                    phi.append(z3_var >= lo)  # type: ignore[operator]
+                    phi.append(z3_var <= hi)  # type: ignore[operator]
+                else:
+                    phi.append(z3_var >= 0)  # type: ignore[operator]
+
+        s = Solver()
+        s.set("timeout", self.TIMEOUT_MS)
+        s.add(phi)
+
+        try:
+            if s.check() != sat:
+                return None
+            comp_model = s.model()
+            result: dict[str, object] = {}
+            for var_name, z3_var in z3_vars.items():
+                if var_name not in target_var_names:
+                    # 直接用 True 側值，保證完全相同
+                    result[var_name] = true_side_concrete.get(var_name, 0)
+                else:
+                    val = comp_model.eval(z3_var, model_completion=True)
+                    result[var_name] = self._z3_val_to_python(
+                        val, domain_types.get(var_name, "int")
+                    )
+            return result
+        except z3.Z3Exception:
+            return None
+
+    @staticmethod
+    def _z3_val_to_python(val: object, var_type: str) -> object:
+        """將 Z3 模型值轉換為 Python 原生型別。"""
+        if var_type == "bool":
+            return bool(z3.is_true(val))
+        elif var_type == "int":
+            try:
+                return int(str(val))
+            except (ValueError, TypeError):
+                return 0
+        else:  # float
+            try:
+                return float(z3.RealVal(str(val)).as_decimal(10).rstrip("?"))
+            except Exception:
+                return 0.0
+
+    def _build_complement_phi(
+        self,
+        dn: DecisionNode,
+        gap: GapEntry,
+        z3_vars: dict[str, object],
+        f_expr: object,
+        domain_types: dict[str, str],
+    ) -> list[object]:
+        """建構 False 側（補集）的 SMT 公式 Φ_complement（供 synthesize 內部使用）。
+
+        (A) 決策結果 = False
+        (B) 目標條件 = False
+        (C) int 變數域約束
+        """
+        phi: list[object] = []
+        converter = ASTToZ3Converter(z3_vars)
+
+        target_cond = next(
+            c for c in dn.condition_set.conditions
+            if c.cond_id == gap.condition_id
+        )
+
+        # (A) 決策結果為 False
+        phi.append(f_expr == BoolVal(False))
+
+        # (B) 目標條件為 False
+        target_z3 = converter.convert_cond(target_cond)
+        phi.append(target_z3 == BoolVal(False))
+
+        # (C) int 變數域約束
+        for var_name, z3_var in z3_vars.items():
+            if domain_types.get(var_name, "int") == "int":
+                if self.domain_bounds and var_name in self.domain_bounds:
+                    lo, hi = self.domain_bounds[var_name][0], self.domain_bounds[var_name][1]
                     phi.append(z3_var >= lo)  # type: ignore[operator]
                     phi.append(z3_var <= hi)  # type: ignore[operator]
                 else:

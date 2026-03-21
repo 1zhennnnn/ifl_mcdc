@@ -76,7 +76,7 @@ def _load_instrumented(
     sys.modules[module_name] = mod
 
     log = ProbeLog()
-    pi._IFL_GLOBAL_LOG = log
+    pi._GLOBAL_LOG = log
     setattr(mod, "_ifl_probe", pi._ifl_probe)
     setattr(mod, "_ifl_record_decision", pi._ifl_record_decision)
 
@@ -92,7 +92,7 @@ def _run_test(
     import ifl_mcdc.layer1.probe_injector as pi
 
     test_id = f"T{uuid.uuid4().hex[:8]}"
-    setattr(pi._IFL_TEST_ID, "value", test_id)
+    setattr(pi._CURRENT_TEST_ID, "value", test_id)
     try:
         getattr(mod, func_name)(**test_case)
     except Exception:

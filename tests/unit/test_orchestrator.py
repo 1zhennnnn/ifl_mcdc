@@ -7,7 +7,7 @@ TC-U-54: INFEASIBLE 路徑不再重複求解
 TC-U-55: 預算耗盡時輸出部分覆蓋報告
 TC-U-56: 損失歷程記錄單調不增
 TC-U-63: Z3 全部 UNSAT → infeasible 路徑偵測，loop 提前終止
-TC-U-73: DomainValidator 在 Orchestrator 層執行，驗證失敗時重試修正提示
+TC-U-73: DomainValidator 在 LLMSampler 層執行，驗證失敗不觸發 infeasible
 TC-U-74: LLMSamplingError 跳過本輪迭代，不標記條件為 infeasible
 """
 from __future__ import annotations
@@ -208,13 +208,15 @@ def test_infeasible_detection_via_z3_unsat():  # type: ignore[no-untyped-def]
 # ─────────────────────────────────────────────
 
 
-def test_domain_validator_retries_in_orchestrator():  # type: ignore[no-untyped-def]
-    """TC-U-73：第 1 次 LLM 回傳不合法案例，第 2 次回傳合法案例。
+def test_domain_validator_retries_in_llm_sampler():  # type: ignore[no-untyped-def]
+    """TC-U-73：DomainValidator 驗證在 LLMSampler 層執行，失敗不觸發 infeasible 標記。
+
+    第 1 次 backend 回傳不合法案例（age=-5），LLMSampler 內部重試，
+    第 2 次回傳合法案例（age=30），orchestrator 正常接受。
 
     驗證：
-    - Orchestrator 在最多 3 次 DomainValidator 重試後接受合法案例
     - 不合法案例不觸發 infeasible 標記
-    - sampler.sample 被呼叫兩次（第 1 次驗證失敗，第 2 次通過）
+    - 系統仍能正常完成迭代
     """
     # age=-5 不合法（違反 FR-10：[0,130]）；age=30 合法
     bad_json = json.dumps(
@@ -222,17 +224,12 @@ def test_domain_validator_retries_in_orchestrator():  # type: ignore[no-untyped-
     )
     good_json = _VALID_JSON
 
-    # 第 1 次回傳不合法，第 2 次回傳合法；後續填充足夠的合法回應
+    # bad_json 被 LLMSampler 內部驗證失敗後重試，消耗兩個 backend 回應
     responses = [bad_json, good_json] + [_VALID_JSON] * 30
     orch = _make_orch(responses, max_iterations=2)
 
-    with patch.object(orch.sampler, "sample", wraps=orch.sampler.sample) as mock_sample:
-        result = orch.run(VACCINE_PATH)
+    result = orch.run(VACCINE_PATH)
 
-    # DomainValidator 驗證失敗後重試 → sampler.sample 至少被呼叫 2 次
-    assert mock_sample.call_count >= 2, (
-        f"sampler.sample 應至少呼叫 2 次（驗證失敗重試），實際 {mock_sample.call_count}"
-    )
     # 不合法案例不應標記為 infeasible
     assert len(result.infeasible_paths) == 0, (
         f"DomainValidator 失敗不應觸發 infeasible，實際 {result.infeasible_paths}"
