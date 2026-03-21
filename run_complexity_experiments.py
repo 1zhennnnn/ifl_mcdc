@@ -96,13 +96,13 @@ def run_experiment(
         backend = MockLLMBackend(responses=[])
         orch = IFLOrchestrator(config=config, backend=backend)
     elif mode == "smt_only":
+        # SMT 輔助模式：使用空 MockLLMBackend，由 SMT 互補模型補全翻轉對
         config = IFLConfig(
             max_iterations=50,
             func_name=fixture["func"],
             domain_types=fixture["domain_types"],
-            llm_retry_delay=0.0,
         )
-        backend = MockLLMBackend(responses=[Exception("mock")] * 200)
+        backend = MockLLMBackend(responses=[])
         orch = IFLOrchestrator(config=config, backend=backend)
     else:  # full
         orch = IFLOrchestrator(config=config)

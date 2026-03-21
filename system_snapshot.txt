@@ -1,0 +1,994 @@
+﻿=== 系統快照 2026-03-21 08:14 ===
+
+=== 檔案清單 ===
+
+=== ifl_mcdc\orchestrator.py ===
+"""
+IFL 銝餅餈游?嚗?隤蹂?撅斗芋蝯??瑁?摰??IFL 餈凋誨??餈游???
+??SDD 蝚?6 蝡?"""
+from __future__ import annotations
+
+import json
+import random
+import sys
+import types
+import uuid
+from dataclasses import dataclass
+from pathlib import Path
+from typing import cast
+
+from ifl_mcdc.config import IFLConfig
+from ifl_mcdc.exceptions import LLMSamplingError, Z3TimeoutError, Z3UNSATError
+from ifl_mcdc.layer1.ast_parser import ASTParser
+from ifl_mcdc.layer1.coverage_engine import MCDCCoverageEngine
+from ifl_mcdc.layer1.probe_injector import ProbeInjector
+from ifl_mcdc.layer2.gap_analyzer import GapAnalyzer
+from ifl_mcdc.layer2.smt_synthesizer import SMTConstraintSynthesizer
+from ifl_mcdc.layer3.acceptance_gate import AcceptanceGate
+from ifl_mcdc.layer3.llm_sampler import LLMBackend, LLMSampler
+from ifl_mcdc.layer3.prompt_builder import PromptConstructor
+from ifl_mcdc.models.decision_node import DecisionNode
+from ifl_mcdc.models.probe_record import ProbeLog
+
+
+@dataclass
+class IFLResult:
+    """IFL 銝餉艘???瑁?蝯???""
+
+    converged: bool                       # True = ?喟絞閬???100%嚗ompute_loss == 0嚗?    final_coverage: float                 # ?喟絞閬???撌脰???/ 2k嚗?    test_suite: list[dict[str, object]]   # ??歇?亙??葫閰行?靘?    iteration_count: int
+    total_tokens: int                     # LLM API 瘨?隡啁? token ??    infeasible_paths: list[str]           # 鋡?Z3 璅??箔??航???隞?ID
+    loss_history: list[int]               # 瘥活餈凋誨敺??仃?潘?2k - covered嚗?
+
+class IFLOrchestrator:
+    """IFL 銝餅餈游?嚗?隤?Layer1/2/3嚗??翮隞??單???????""
+
+    def __init__(
+        self,
+        config: IFLConfig,
+        backend: LLMBackend | None = None,
+    ) -> None:
+        self.config = config
+        self.parser = ASTParser()
+        self.engine = MCDCCoverageEngine()
+        self.analyzer = GapAnalyzer()
+        self.smt = SMTConstraintSynthesizer()
+        self.prompt = PromptConstructor()
+        actual_backend = backend if backend is not None else config.llm_backend
+        self.sampler = LLMSampler(actual_backend, config.llm_retry_delay)
+        self.gate = AcceptanceGate(self.engine)
+        self._infeasible: set[str] = set()
+
+    def run(self, source_path: str | Path) -> IFLResult:
+        """?瑁? IFL 銝餅?蝔?
+        甇仿?嚗?          1. Layer 1 閫????蝣?          2. ?ａ?瘜典 & ??頛
+          3. ?瑁? 3 ?璈?憪葫閰行?靘?          4. 撱箇??? MCDCMatrix
+          5. IFL 餈凋誨餈游?嚗?單?????嚗?          6. 蝯?銝血???IFLResult
+
+        Args:
+            source_path: ?格? Python ??蝣潸楝敺?
+        Returns:
+            IFLResult ?怨????葫閰血?隞嗚?憭望風蝔?鞈???
+        Raises:
+            ValueError: ??蝣潔葉?曆??唬遙雿捱蝑?暺?        """
+        # ?? 甇仿? 1嚗圾????
+        decision_nodes = self.parser.parse_file(str(source_path))
+        if not decision_nodes:
+            raise ValueError(f"??{source_path} 銝剜銝隞颱?瘙箇?蝭暺?)
+
+        dn = decision_nodes[0]
+
+        # ?? 甇仿? 2嚗?釣????
+        source = Path(source_path).read_text(encoding="utf-8")
+        injector = ProbeInjector(decision_nodes)
+        instrumented_source = injector.inject(source)
+        module_name = f"_ifl_inst_{Path(str(source_path)).stem}"
+        instrumented_module = self._load_from_string(instrumented_source, module_name)
+
+        log = ProbeLog()
+        self._inject_probes(instrumented_module, log)
+
+        # ?? 甇仿? 3嚗?憪璈葫閰???
+        test_suite: list[dict[str, object]] = []
+        for _ in range(3):
+            test_case = self._generate_random_test(dn, self.config.domain_types)
+            test_id = self._run_test(instrumented_module, test_case, log)
+            test_suite.append({**test_case, "__test_id": test_id, "__source": "random"})
+
+        # ?? 甇仿? 4嚗遣蝡?憪????
+        matrix = self.engine.build_matrix(dn.condition_set, log)
+        loss_history: list[int] = [matrix.compute_loss()]
+
+        # ?? 甇仿? 5嚗FL 餈凋誨餈游? ??
+        iteration = 0
+
+        while matrix.compute_loss() > 0 and iteration < self.config.max_iterations:
+            iteration += 1
+
+            # ?摨行?雿????航?蝻箏
+            gaps = self.analyzer.analyze(matrix)
+            gap = next(
+                (g for g in gaps if g.condition_id not in self._infeasible),
+                None,
+            )
+            if gap is None:
+                break  # ??擗撩???銝銵?
+            # 甇仿? 2嚗3 ??蝝? 峖_gap嚗??啣銵圾蝛粹? 峏嚗ound_specs嚗?            try:
+                smt_result = self.smt.synthesize(
+                    dn, gap, self.config.domain_types, self.config.domain_bounds
+                )
+            except (Z3TimeoutError, Z3UNSATError):
+                self._infeasible.add(gap.condition_id)
+                loss_history.append(matrix.compute_loss())
+                continue
+
+            if not smt_result.satisfiable:
+                self._infeasible.add(gap.condition_id)
+                loss_history.append(matrix.compute_loss())
+                continue
+
+            # 甇仿? 3嚗?葫閰行?靘?SMT-direct ??LLM ?拍車頝臬?嚗?            if self.config.smt_direct:
+                # 蝝MT撠璅∪?嚗?亙銵?Z3 銝餅芋??+ 鈭?璅∪?嚗耦???渡蕃頧?
+                # 銝?思遙雿?LLM ?亙
+                if not smt_result.model:
+                    loss_history.append(matrix.compute_loss())
+                    continue
+                # 銝餅芋??gap 蝧餉??孵???湛?
+                main_case = self._z3_model_to_python(
+                    smt_result.model, self.config.domain_types
+                )
+                if main_case:
+                    main_id = self._run_test(instrumented_module, main_case, log)
+                    if self.gate.evaluate(matrix, log, main_id):
+                        test_suite.append(
+                            {**main_case, "__test_id": main_id, "__source": "smt"}
+                        )
+                # 鈭?璅∪?嚗銝?湛?嚗Ⅱ靽蕃頧????賣?獢?
+                if smt_result.complement_model:
+                    comp_case = self._z3_model_to_python(
+                        smt_result.complement_model, self.config.domain_types
+                    )
+                    if comp_case:
+                        comp_id = self._run_test(instrumented_module, comp_case, log)
+                        if self.gate.evaluate(matrix, log, comp_id):
+                            test_suite.append(
+                                {**comp_case, "__test_id": comp_id, "__source": "smt"}
+                            )
+                loss_history.append(matrix.compute_loss())
+                continue  # 頝喲? LLM 頝臬?
+            else:
+                # 璅? IFL 頝臬?嚗? 峏 頧??箄?嗉?閮?內嚗??LLM
+                p_prompt = self.prompt.build(
+                    dn,
+                    gap,
+                    smt_result.bound_specs or [],
+                    self.config.func_signature,
+                    self.config.domain_context,
+                )
+                # Orchestrator 鞎痊??撽??岫嚗?憭?3 甈∴?
+                # LLMSamplingError嚗SON 閫??憭望?嚗?撽?銝活銝? ??頝喲??祈憚嚗?頛芷?閰?                _current_prompt = p_prompt
+                new_case: dict[str, object] | None = None
+                for _val_attempt in range(3):
+                    try:
+                        _candidate = self.sampler.sample(_current_prompt)
+                    except LLMSamplingError:
+                        break  # JSON 閫??憭望?嚗璉頛?                    _vr = self.config.domain_validator.validate(
+                        json.dumps(_candidate)
+                    )
+                    if _vr.passed:
+                        new_case = _candidate
+                        break
+                    # 撽?憭望?嚗? violations 蝺函Ⅳ?箔耨甇??蝷綽?蝜潛??岫
+                    _current_prompt = self._build_validation_prompt(
+                        p_prompt, _vr.to_corrective_prompt()
+                    )
+                if new_case is None:
+                    loss_history.append(matrix.compute_loss())
+                    continue
+
+            # 甇仿? 4嚗?甇仿? 5嚗?AcceptanceGate 撽? L(X) ?臬銝?嚗? LLM 頝臬?韏啣?ㄐ嚗?            test_id = self._run_test(instrumented_module, new_case, log)
+            accepted = self.gate.evaluate(matrix, log, test_id)
+
+            if accepted:
+                test_suite.append(
+                    {**new_case, "__test_id": test_id, "__source": "llm"}
+                )
+
+            # SMT 鈭?璅∪?鋆?蝧餉?撠銝?湛?
+            # LLM ????靘?閬? gap ?璅??憒?c_i=True嚗?
+            # 雿?MC/DC unique-cause ?閬?湛?c_i=True ??c_i=False嚗????冽 log嚗?            # 銝隞?隞嗅澆??函?蝻箏?鈭??湛?flip pair 瘞賊??⊥???????            if smt_result.complement_model:
+                comp_case = self._z3_model_to_python(
+                    smt_result.complement_model, self.config.domain_types
+                )
+                if comp_case:
+                    comp_id = self._run_test(instrumented_module, comp_case, log)
+                    if self.gate.evaluate(matrix, log, comp_id):
+                        test_suite.append(
+                            {**comp_case, "__test_id": comp_id, "__source": "smt"}
+                        )
+
+            loss_history.append(matrix.compute_loss())
+
+        # ?? 甇仿? 6嚗?鋆?????
+        total_tokens = sum(
+            cast(int, e.get("est_tokens", 0))
+            for e in self.sampler.token_log
+        )
+
+        return IFLResult(
+            converged=matrix.compute_loss() == 0,
+            final_coverage=matrix.coverage_ratio,
+            test_suite=test_suite,
+            iteration_count=iteration,
+            total_tokens=total_tokens,
+            infeasible_paths=list(self._infeasible),
+            loss_history=loss_history,
+        )
+
+    def _run_test(
+        self,
+        module: types.ModuleType,
+        test_case: dict[str, object],
+        log: ProbeLog,
+    ) -> str:
+        """?瑁??桐?皜祈岫獢?嚗????? test_id??""
+        import ifl_mcdc.layer1.probe_injector as pi
+
+        test_id = f"T{uuid.uuid4().hex[:8]}"
+        setattr(pi._IFL_TEST_ID, "value", test_id)
+        try:
+            getattr(module, self.config.func_name)(**test_case)
+        except Exception as _exc:  # noqa: BLE001  # 雿輻?撘?賣??箔遙??憭?            pass  # 皜祈岫憭望?銝蔣?踵????撌脣 if ????
+        return test_id
+
+    @staticmethod
+    def _load_from_string(source: str, module_name: str) -> types.ModuleType:
+        """??蝺刻陌銝西??亙?銵冽?芋蝯?""
+        mod = types.ModuleType(module_name)
+        exec(compile(source, module_name, "exec"), mod.__dict__)  # noqa: S102
+        sys.modules[module_name] = mod
+        return mod
+
+    @staticmethod
+    def _inject_probes(module: types.ModuleType, log: ProbeLog) -> None:
+        """撠?撘釣?亙?銵冽?芋蝯?銝行??策摰? ProbeLog??""
+        import ifl_mcdc.layer1.probe_injector as pi
+
+        pi._IFL_GLOBAL_LOG = log
+        setattr(module, "_ifl_probe", pi._ifl_probe)
+        setattr(module, "_ifl_record_decision", pi._ifl_record_decision)
+
+    @staticmethod
+    def _z3_model_to_python(
+        model: dict[str, object],
+        domain_types: dict[str, str],
+    ) -> dict[str, object]:
+        """撠?Z3 model 摮頧???Python ???潘??? smt_direct 璅∪?雿輻嚗?""
+        import z3 as _z3
+
+        result: dict[str, object] = {}
+        for var_name, val in model.items():
+            if val is None:
+                continue
+            t = domain_types.get(var_name, "int")
+            try:
+                if t == "bool":
+                    result[var_name] = bool(_z3.is_true(val))
+                elif t == "int":
+                    result[var_name] = int(str(val))
+                else:
+                    result[var_name] = float(str(val).rstrip("?"))
+            except (ValueError, TypeError):
+                pass
+        return result
+
+    @staticmethod
+    def _build_validation_prompt(original: str, violations: str) -> str:
+        """撱箸???撽?憭望?敺?靽格迤?內閰?""
+        return (
+            f"銝?甈∩?????隞乩???嚗????嚗n"
+            f"{violations}\n\n"
+            f"隢?頛詨????JSON ?拐辣嚗?閬?隞颱??嗡????n\n"
+            f"???瘙?\n"
+            f"{original}"
+        )
+
+    @staticmethod
+    def _generate_random_test(
+        dn: DecisionNode,
+        domain_types: dict[str, str],
+    ) -> dict[str, object]:
+        """?箸捱蝑?暺?????貊??璈潦?
+        int ??randint(0, 130)嚗泵??DomainValidator 撟湧翩閬? 0嚚?30嚗?        bool ??choice([True, False])
+        """
+        test: dict[str, object] = {}
+        seen: set[str] = set()
+        for cond in dn.condition_set.conditions:
+            for var_name in cond.var_names:
+                if var_name in seen:
+                    continue
+                seen.add(var_name)
+                var_type = domain_types.get(var_name, "int")
+                if var_type == "bool":
+                    test[var_name] = random.choice([True, False])
+                else:
+                    test[var_name] = random.randint(0, 130)
+        return test
+
+=== ifl_mcdc\layer3\llm_sampler.py ===
+"""
+LLM ?⊥見?剁??澆 LLM 敺垢?圾??JSON??閰佗???撠?JSON 閫??憭望?嚗?
+?桐??瑁痊嚗雯頝臬惜 + JSON 閫??????撽???IFLOrchestrator ?刻翮隞?艘?葉蝯曹?鞎痊??
+TC-U-47: 蝚砌?甈⊥?????TC-U-48: 閫?? markdown ????JSON
+TC-U-49: 蝚砌?甈∪??喳? JSON ??蝚砌?甈⊥???TC-U-50: ?券?岫憭望? ??LLMSamplingError
+TC-U-51: token_log 閮?瘥活?岫 / ????"""
+from __future__ import annotations
+
+import json
+import re
+import time
+from abc import ABC, abstractmethod
+
+from ifl_mcdc.exceptions import LLMSamplingError
+
+
+# ?????????????????????????????????????????????
+# LLM 敺垢?質情隞
+# ?????????????????????????????????????????????
+
+
+class LLMBackend(ABC):
+    """LLM 敺垢蝯曹?隞??""
+
+    @abstractmethod
+    def complete(self, prompt: str, max_tokens: int = 512) -> str:
+        """?澆 LLM 銝血??喳???摮?""
+        ...
+
+
+class OpenAIBackend(LLMBackend):
+    """OpenAI ChatCompletion 敺垢??""
+
+    def __init__(
+        self,
+        model: str = "gpt-4o",
+        api_key: str = "",
+        temperature: float = 0.3,
+    ) -> None:
+        self.model = model
+        self.api_key = api_key
+        self.temperature = temperature
+
+    def complete(self, prompt: str, max_tokens: int = 512) -> str:
+        """?澆 OpenAI API??摰? openai 憟辣銝西身摰?OPENAI_API_KEY??""
+        import openai
+        client = openai.OpenAI(api_key=self.api_key or None)
+        resp = client.chat.completions.create(
+            model=self.model,
+            temperature=self.temperature,
+            max_tokens=max_tokens,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        return resp.choices[0].message.content or ""
+
+
+class AnthropicBackend(LLMBackend):
+    """Anthropic Messages 敺垢??""
+
+    def __init__(self, model: str = "claude-sonnet-4-6", api_key: str = "") -> None:
+        self.model = model
+        self.api_key = api_key
+
+    def complete(self, prompt: str, max_tokens: int = 512) -> str:
+        """?澆 Anthropic API??摰? anthropic 憟辣銝西身摰?ANTHROPIC_API_KEY??""
+        import anthropic
+        client = anthropic.Anthropic(api_key=self.api_key or None)
+        msg = client.messages.create(
+            model=self.model,
+            max_tokens=max_tokens,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        block = msg.content[0]
+        return block.text if hasattr(block, "text") else ""
+
+
+class MockLLMBackend(LLMBackend):
+    """皜祈岫??Mock 敺垢嚗?????身?????箔?憭?""
+
+    def __init__(self, responses: list[str | BaseException]) -> None:
+        self._responses = list(responses)
+        self._index = 0
+
+    def complete(self, prompt: str, max_tokens: int = 512) -> str:
+        if self._index >= len(self._responses):
+            raise LLMSamplingError("MockLLMBackend: ???”撌脰")
+        resp = self._responses[self._index]
+        self._index += 1
+        if isinstance(resp, BaseException):
+            raise resp
+        return resp
+
+
+# ?????????????????????????????????????????????
+# LLM ?⊥見??# ?????????????????????????????????????????????
+
+
+class LLMSampler:
+    """?澆 LLM 敺垢嚗?閰西圾??JSON嚗???token 瘨?
+    ?桐??瑁痊嚗?鞎痊蝬脰楝撅方? JSON 閫????    ??撽???IFLOrchestrator ?刻翮隞?艘?葉蝯曹?鞎痊??    """
+
+    MAX_RETRIES: int = 3
+
+    def __init__(
+        self,
+        backend: LLMBackend,
+        retry_delay: float = 2.0,
+    ) -> None:
+        self.backend = backend
+        self.retry_delay = retry_delay
+        self.token_log: list[dict[str, object]] = []
+
+    def sample(self, prompt: str) -> dict[str, object]:
+        """?憭?閰?MAX_RETRIES 甈∴??蝚砌????圾?? JSON dict??
+        ??撠?JSON 閫??憭望??脰??岫嚗雯頝舫隤文?璅??閰佗???        ??隤?撽?銝甇文惜嚗 IFLOrchestrator 鞎痊??
+        Args:
+            prompt: Gap-Guided Prompt??
+        Returns:
+            閫??????dict??
+        Raises:
+            LLMSamplingError: ?券?岫憭望?嚗SON 閫???雯頝舫隤歹???        """
+        current_prompt = prompt
+        last_error: str = ""
+
+        for attempt in range(1, self.MAX_RETRIES + 1):
+            # 蝚?2 甈∟絲嚗?輻?敺?            if attempt > 1:
+                time.sleep(self.retry_delay * (attempt - 1))
+                current_prompt = self._build_retry_prompt(prompt, last_error)
+
+            t_start = time.time()
+            try:
+                raw = self.backend.complete(current_prompt)
+            except Exception as exc:
+                elapsed = time.time() - t_start
+                last_error = str(exc)
+                self.token_log.append(
+                    {
+                        "attempt": attempt,
+                        "elapsed": elapsed,
+                        "est_tokens": 0,
+                    }
+                )
+                continue
+
+            elapsed = time.time() - t_start
+            est_tokens = len(raw) // 4  # 蝎隡啁?
+            self.token_log.append(
+                {
+                    "attempt": attempt,
+                    "elapsed": elapsed,
+                    "est_tokens": est_tokens,
+                }
+            )
+
+            data, parse_error = self._parse_json(raw)
+            if data is None:
+                last_error = f"JSON 閫??憭望?嚗parse_error}"
+                continue
+
+            return data
+
+        raise LLMSamplingError(
+            f"LLM ?⊥見憭望?嚗歇?岫 {self.MAX_RETRIES} 甈～?敺隤歹?{last_error}"
+        )
+
+    @staticmethod
+    def _parse_json(raw: str) -> tuple[dict[str, object] | None, str | None]:
+        """?岫敺?LLM ??銝剛圾??JSON ?拐辣??
+        甇仿?嚗?          1. 蝘駁 ```json ... ``` ??``` ??
+          2. json.loads(cleaned)
+          3. 憭望? ????regex ??{ ... }嚗e.DOTALL嚗?閰?
+        Returns:
+            (dict, None) ??嚗?None, error_str) 憭望???        """
+        # 蝘駁 markdown code block
+        cleaned = re.sub(r"```json\s*", "", raw)
+        cleaned = re.sub(r"```\s*", "", cleaned)
+        cleaned = cleaned.strip()
+
+        try:
+            data = json.loads(cleaned)
+            if isinstance(data, dict):
+                return data, None
+            return None, f"?? JSON ?拐辣嚗???{type(data).__name__}"
+        except json.JSONDecodeError:
+            pass
+
+        # ??regex ?? { ... }
+        match = re.search(r"\{.*\}", raw, re.DOTALL)
+        if match:
+            try:
+                data = json.loads(match.group())
+                if isinstance(data, dict):
+                    return data, None
+            except json.JSONDecodeError as exc:
+                return None, str(exc)
+
+        return None, f"?⊥?敺??葉?? JSON ?拐辣嚗raw[:80]!r}"
+
+    @staticmethod
+    def _build_retry_prompt(original: str, error: str) -> str:
+        """撱箸? JSON 閫??憭望???閰行?蝷箄???""
+        return (
+            f"銝?甈∩?????隞乩???嚗????嚗n"
+            f"{error}\n\n"
+            f"隢?頛詨????JSON ?拐辣嚗?閬?隞颱??嗡????n\n"
+            f"???瘙?\n"
+            f"{original}"
+        )
+
+=== ifl_mcdc\layer3\domain_validator.py ===
+"""
+??撽??剁?撽? LLM 頛詨?葫閰行?靘泵???????
+TC-U-41: ??鞎撟湧翩
+TC-U-42: ??頞? 130 ?僑朣?TC-U-43: ????0 ??130 ??嚗RS FR-10嚗?敺?蝯?瘜???
+TC-U-44: ??鞎頝?甈⊥蝔桀予??TC-U-45: ??????擃◢????璅?
+TC-U-46: ?⊥? JSON ??passed=False
+"""
+from __future__ import annotations
+
+import json
+
+from ifl_mcdc.models.validation import DomainRule, ValidationResult, Violation
+
+
+DEFAULT_MEDICAL_RULES: list[DomainRule] = [
+    DomainRule(
+        field="age",
+        description="撟湧翩敹???0嚚?30 銋?",
+        validator=lambda v: isinstance(v, int) and not isinstance(v, bool) and 0 <= v <= 130,
+    ),
+    DomainRule(
+        field="days_since_last",
+        description="頝?甈⊥蝔桀予?詨?????湔",
+        validator=lambda v: isinstance(v, int) and not isinstance(v, bool) and v >= 0,
+    ),
+    DomainRule(
+        field="high_risk",
+        description="擃◢?芣?閮??撣???,
+        validator=lambda v: isinstance(v, bool),
+    ),
+    DomainRule(
+        field="egg_allergy",
+        description="??璅?敹??箏???,
+        validator=lambda v: isinstance(v, bool),
+    ),
+]
+
+
+class DomainValidator:
+    """撽? LLM ???葫閰行?靘?衣泵???????""
+
+    def __init__(self, rules: list[DomainRule] | None = None) -> None:
+        self.rules = rules if rules is not None else DEFAULT_MEDICAL_RULES
+
+    def validate(self, test_case_json: str) -> ValidationResult:
+        """撽? JSON 摮葡敶Ｗ??葫閰行?靘?
+        Args:
+            test_case_json: LLM 頛詨??JSON 摮葡??
+        Returns:
+            ValidationResult嚗assed=True 銵函內?券閬?????        """
+        # 甇仿? 1嚗圾??JSON
+        try:
+            data: dict[str, object] = json.loads(test_case_json)
+        except json.JSONDecodeError as exc:
+            return ValidationResult(
+                passed=False,
+                violations=[
+                    Violation(
+                        field="__json__",
+                        description=f"JSON 閫??憭望?嚗exc}",
+                        actual_value=test_case_json[:100],
+                    )
+                ],
+            )
+
+        # 甇仿? 2嚗?憟閬?
+        violations: list[Violation] = []
+        for rule in self.rules:
+            if rule.field not in data:
+                continue  # 甈?銝??冽?頝喲?嚗?閮梢??雿?
+            value = data[rule.field]
+            try:
+                ok = rule.validator(value)
+            except (TypeError, ValueError):
+                ok = False
+            if not ok:
+                violations.append(
+                    Violation(
+                        field=rule.field,
+                        description=rule.description,
+                        actual_value=repr(value),
+                    )
+                )
+
+        return ValidationResult(passed=len(violations) == 0, violations=violations)
+
+=== ifl_mcdc\layer3\acceptance_gate.py ===
+"""
+?亙???閰摯?唳葫閰行?靘?阡?雿?MC/DC 閬??仃??
+TC-U-52: L(X) ?????? True嚗?TC-U-53: L(X) 銝???蝯?? False嚗?"""
+from __future__ import annotations
+
+from ifl_mcdc.layer1.coverage_engine import MCDCCoverageEngine
+from ifl_mcdc.models.coverage_matrix import MCDCMatrix
+from ifl_mcdc.models.probe_record import ProbeLog
+
+
+class AcceptanceGate:
+    """?斗?唳葫閰行?靘?行???雿?MC/DC 閬???憭晞?""
+
+    def __init__(self, engine: MCDCCoverageEngine) -> None:
+        self.engine = engine
+
+    def evaluate(
+        self,
+        matrix: MCDCMatrix,
+        log: ProbeLog,
+        new_test_id: str,
+    ) -> bool:
+        """?澆 engine.update()嚗???L(X) ?臬????
+        Args:
+            matrix: ?嗅? MC/DC 閬??????靽格嚗?            log: ?ａ?閫皜祆隤?????new_test_id ??????            new_test_id: ?啣??亦?皜祈岫獢? ID??
+        Returns:
+            True ??L(X) ?迨甈⊥?啗?雿??血? False??        """
+        return self.engine.update(matrix, log, new_test_id)
+
+=== ifl_mcdc\layer3\prompt_builder.py ===
+"""
+?內閰遣瑽嚗??畾萄? Gap-Guided Prompt??
+TC-U-37: bound_specs ?券?箇??禮3
+TC-U-38: 頞? MAX_TOKENS ???禮1 ??source_context
+TC-U-39: 禮3 ??禮4 摰靽?嚗?瑕?嚗?TC-U-40: F2T/T2F ?孵??膩甇?Ⅱ
+"""
+from __future__ import annotations
+
+import json
+
+from ifl_mcdc.models.coverage_matrix import GapEntry
+from ifl_mcdc.models.decision_node import DecisionNode
+from ifl_mcdc.models.smt_models import BoundSpec
+
+
+class PromptConstructor:
+    """撱箸??挾撘?Gap-Guided Prompt??
+    禮1 ?怎??? ??禮2 ?格?蝻箏 ??禮3 蝎曄Ⅱ?詨潛?????禮4 頛詨?澆?
+    """
+
+    MAX_TOKENS: int = 2048
+
+    def build(
+        self,
+        decision_node: DecisionNode,
+        gap: GapEntry,
+        bound_specs: list[BoundSpec],
+        func_signature: str,
+        domain_context: str = "",
+    ) -> str:
+        """撱箸??挾撘?蝷箄???
+        ?芣蝑嚗頞? MAX_TOKENS嚗誑摮??訾摯蝞?嚗? 禮1 ??source_context
+        ???芣嚗? ??禮4 敹?摰靽???
+        Args:
+            decision_node: 瘙箇?蝭暺???source_context嚗?            gap: ?格?蝻箏??            bound_specs: 霈??閬?”??            func_signature: ?賢?蝪賢?摮葡??            domain_context: ?詨‵??憓牧??
+        Returns:
+            ?挾撘?蝷箄?摮葡??        """
+        # ?曉 gap.condition_id 撠???隞嗉”??
+        cond_expression = ""
+        for cond in decision_node.condition_set.conditions:
+            if cond.cond_id == gap.condition_id:
+                cond_expression = cond.expression
+                break
+
+        direction_str = "True" if gap.flip_direction == "F2T" else "False"
+
+        # 禮3 ?箏??典?嚗???撠?嚗?        lines: list[str] = ["?摨?憓?撠?, "隢?誑銝?頛舐?????銝?泵??撖阡??憓?皜祈岫獢?嚗?, ""]
+        for bs in bound_specs:
+            if bs.interval is not None:
+                lo, hi = bs.interval
+                lo_str = str(int(lo)) if lo == int(lo) else str(lo)
+                hi_str = str(int(hi)) if hi == int(hi) else str(hi)
+                unit = f"嚗雿?{bs.medical_unit}嚗? if bs.medical_unit else ""
+                lines.append(
+                    f"- {bs.var_name}嚗?? {lo_str} ??{hi_str} 銋?{unit}嚗?
+                    "隢???摨????擃??
+                )
+            elif bs.valid_set is not None:
+                vals = sorted(bs.valid_set, key=str)
+                if len(vals) == 1:
+                    lines.append(f"- {bs.var_name}嚗?? {vals[0]}")
+                else:
+                    lines.append(f"- {bs.var_name}嚗?? {vals} 銋?")
+        lines += [
+            "",
+            "????瘙?,
+            f"隢????撖衣?{domain_context}?湔嚗Ⅱ靽?",
+            "1. ?詨潛泵??撖西摨???靘?撟湧翩銝???0 ?扔蝡臬潘?",
+            "2. ???訾??????摨??舀?,
+            "3. ?湧?獢?隞?”銝??撖血?賢??函????",
+            "",
+            "?摨???瘙?,
+            "???葫閰行?靘??泵??撖阡??憓?",
+            "- 撟湧翩隢?摨?撣貉???僑朣∴?撱箄降 18~85 甇脖???",
+            "- ???訾????????典????,
+            "- ?踹?雿輻璆萇垢?潘?憒?age=0, age=130, days=9999嚗?,
+            "- ?喳??銝雿?撖血??函??",
+        ]
+        sec3 = "\n".join(lines)
+
+        # 禮4 ?箏??典?
+        example_json = json.dumps(
+            {bs.var_name: "..." for bs in bound_specs}, ensure_ascii=False
+        )
+        sec4 = (
+            "?撓?箸撘n"
+            "隢?頛詨銝??瘜? JSON ?拐辣嚗???賢??摰銝?氬n"
+            "蝳迫 markdown??甇Ｚ牧??摮?甇?```json 璅??n"
+            f"{example_json}"
+        )
+
+        # 禮2 ?箏??典?
+        sec2 = (
+            f"?璅撩??n"
+            f"璇辣 {gap.condition_id}嚗cond_expression}嚗?閬潛\n"
+            f"{direction_str}嚗??湧??賢?頛詨?迨?寡???
+        )
+
+        # 禮1 ?舀?琿??        source_context = decision_node.source_context
+
+        def _build_full(ctx: str) -> str:
+            sec1 = (
+                f"???憓n"
+                f"?賢?嚗func_signature}\n"
+                f"??嚗domain_context}\n"
+                f"??蝣潘?\n"
+                f"{ctx}"
+            )
+            return "\n\n".join([sec1, sec2, sec3, sec4])
+
+        full = _build_full(source_context)
+
+        # ?芣嚗頞? MAX_TOKENS嚗郊蝮桃 source_context
+        if len(full) > self.MAX_TOKENS:
+            # 閮??箏??典??瑕漲嚗???禮1 source_context嚗?            sec1_header = (
+                f"???憓n"
+                f"?賢?嚗func_signature}\n"
+                f"??嚗domain_context}\n"
+                f"??蝣潘?\n"
+            )
+            fixed_len = len(sec1_header) + len("\n\n") * 3 + len(sec2) + len(sec3) + len(sec4)
+            budget = self.MAX_TOKENS - fixed_len
+
+            if budget > 0:
+                source_context = source_context[:budget]
+            else:
+                source_context = ""
+
+            full = _build_full(source_context)
+
+        return full
+
+=== ifl_mcdc\models\coverage_matrix.py ===
+"""
+MC/DC 閬???????璇??
+TC-U-03: MCDCMatrix.compute_loss ???潭葫閰?TC-U-04: MCDCMatrix.coverage_ratio 閮?皜祈岫
+"""
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+
+from ifl_mcdc.models.decision_node import ConditionSet
+
+
+@dataclass
+class GapEntry:
+    """撠閬??蝡?蝧餉??孵?閮???""
+
+    condition_id: str
+    flip_direction: str          # "F2T" ??"T2F"
+    missing_pair_type: str       # "unique_cause"
+    estimated_difficulty: float  # 0.0 ~ 1.0
+
+
+@dataclass
+class MCDCMatrix:
+    """餈質馱瘥?隞嗅歇閬??蕃頧???函?撠???""
+
+    condition_set: ConditionSet
+    _covered: set[tuple[str, str]] = field(default_factory=set, repr=False)
+    _infeasible: set[tuple[str, str]] = field(default_factory=set, repr=False)
+
+    @property
+    def k(self) -> int:
+        """璇辣?賊???""
+        return self.condition_set.k
+
+    @property
+    def coverage_ratio(self) -> float:
+        """?喟絞閬???= 撌脰???/ 2k嚗?函撩?????infeasible嚗=0 ????1.0??""
+        if self.k == 0:
+            return 1.0
+        return len(self._covered) / (2 * self.k)
+
+    @property
+    def feasible_count(self) -> int:
+        """?航?蝻箏蝮賣 = 2k - infeasible ?賊???""
+        return max(0, 2 * self.k - len(self._infeasible))
+
+    @property
+    def effective_coverage_ratio(self) -> float:
+        """??閬???= 撌脰??銵撩??/ ?航?蝻箏蝮賣嚗???infeasible嚗?        ?航?蝻箏?粹????1.0嚗??箏歇摰閬?嚗?""
+        if self.feasible_count == 0:
+            return 1.0
+        covered_feasible = len(self._covered - self._infeasible)
+        return covered_feasible / self.feasible_count
+
+    def compute_loss(self) -> int:
+        """?喟絞?仃 = 2k - 撌脰??嚗 infeasible嚗?""
+        return (2 * self.k) - len(self._covered)
+
+    def compute_effective_loss(self) -> int:
+        """???仃 = ?航?蝻箏 - 撌脰??銵撩???? infeasible 敺??拚?蝻箏?賂???""
+        covered_feasible = len(self._covered - self._infeasible)
+        return self.feasible_count - covered_feasible
+
+    def mark_infeasible(self, cond_id: str, flip_direction: str) -> None:
+        """璅?甇斤蕃頧??箔??航?頝臬?嚗色Valid=????Z3 UNSAT嚗?
+        Args:
+            cond_id: 璇辣 ID??            flip_direction: 敹???"F2T" ??"T2F"??
+        Raises:
+            ValueError: flip_direction 銝?瘜???        """
+        if flip_direction not in ("F2T", "T2F"):
+            raise ValueError(f"?⊥??蕃頧??{flip_direction!r}")
+        self._infeasible.add((cond_id, flip_direction))
+
+    def get_gap_list(self) -> list[GapEntry]:
+        """?????芾??? GapEntry ?”??""
+        gaps: list[GapEntry] = []
+        for cond in self.condition_set.conditions:
+            for flip in ("F2T", "T2F"):
+                if (cond.cond_id, flip) not in self._covered:
+                    gaps.append(
+                        GapEntry(
+                            condition_id=cond.cond_id,
+                            flip_direction=flip,
+                            missing_pair_type="unique_cause",
+                            estimated_difficulty=0.5,
+                        )
+                    )
+        return gaps
+
+    def mark_covered(self, cond_id: str, flip_direction: str) -> None:
+        """璅???璇辣?蕃頧?撌脰???
+        Args:
+            cond_id: 璇辣 ID??            flip_direction: 敹???"F2T" ??"T2F"??
+        Raises:
+            ValueError: flip_direction 銝?瘜???        """
+        if flip_direction not in ("F2T", "T2F"):
+            raise ValueError(
+                f"flip_direction 敹???'F2T' ??'T2F'嚗???{flip_direction!r}"
+            )
+        self._covered.add((cond_id, flip_direction))
+
+=== ifl_mcdc\config.py ===
+"""
+蝟餌絞?典?閮剖?嚗??隤踵??葉蝞∠???
+??SDD 蝚?8 蝡?"""
+from __future__ import annotations
+
+from pydantic import Field
+from pydantic_settings import BaseSettings
+
+from ifl_mcdc.layer3.domain_validator import DEFAULT_MEDICAL_RULES, DomainValidator
+from ifl_mcdc.layer3.llm_sampler import AnthropicBackend, LLMBackend, OpenAIBackend
+
+
+class IFLConfig(BaseSettings):
+    """IFL 蝟餌絞?典?閮剖?嚗???啣?霈??.env 瑼???""
+
+    model_config = {"env_prefix": "IFL_", "env_file": ".env", "extra": "ignore"}
+
+    # ?? LLM ??
+    llm_provider: str = Field(default="openai")
+    llm_model: str = Field(default="gpt-4o")
+    llm_api_key: str = Field(default="")
+    llm_temperature: float = Field(default=0.3)
+
+    # ?? SMT ??
+    smt_timeout_ms: int = Field(default=10_000)
+
+    # ?? IFL 餈凋誨?批 ??
+    max_iterations: int = Field(default=50)
+    min_coverage: float = Field(default=1.0)
+    llm_retry_delay: float = Field(default=2.0)
+    smt_direct: bool = Field(default=False)  # 蝝MT撠璅∪?嚗?乩蝙??Z3 model嚗??澆 LLM
+
+    # ?? ?格?璅∠? ??
+    func_name: str = Field(default="check_vaccine_eligibility")
+    func_signature: str = Field(
+        default="check_vaccine_eligibility(age, high_risk, days_since_last, egg_allergy)"
+    )
+    domain_context: str = Field(default="瘚??怨??賣?鞈蝭拚蝟餌絞")
+
+    # ?? ???摰儔嚗??詨? ??Z3 ?嚗??
+    domain_types: dict[str, str] = Field(
+        default={
+            "age": "int",
+            "high_risk": "bool",
+            "days_since_last": "int",
+            "egg_allergy": "bool",
+        }
+    )
+
+    # ?? ???詨潮???霈????[min, max]嚗??
+    domain_bounds: dict[str, list[int]] = Field(
+        default={
+            "age": [18, 100],
+            "days_since_last": [0, 3650],
+        }
+    )
+
+    @property
+    def llm_backend(self) -> LLMBackend:
+        """?寞? llm_provider 撱箇?撠???LLM 敺垢??""
+        if self.llm_provider == "openai":
+            return OpenAIBackend(self.llm_model, self.llm_api_key, self.llm_temperature)
+        if self.llm_provider == "anthropic":
+            return AnthropicBackend(self.llm_model, self.llm_api_key)
+        raise ValueError(f"銝?渡? LLM 靘???{self.llm_provider!r}")
+
+    @property
+    def domain_validator(self) -> DomainValidator:
+        """撱箇?撣園?閮剝????撽??具?""
+        return DomainValidator(DEFAULT_MEDICAL_RULES)
+
+=== 測試結果 ===
+============================= test session starts =============================
+platform win32 -- Python 3.11.5, pytest-8.2.2, pluggy-1.6.0
+rootdir: C:\Users\zhenn\MyNSN
+configfile: pyproject.toml
+plugins: anyio-4.12.1, dash-2.18.2, Faker-37.3.0, asyncio-0.23.7, cov-5.0.0
+asyncio: mode=Mode.STRICT
+collected 93 items
+
+tests\unit\test_layer1_ast_parser.py ......                              [  6%]
+tests\unit\test_layer1_coupling_graph.py .......                         [ 13%]
+tests\unit\test_layer1_coverage_engine.py .....                          [ 19%]
+tests\unit\test_layer1_probe_injector.py ....                            [ 23%]
+tests\unit\test_layer2_boolean_derivative.py ......                      [ 30%]
+tests\unit\test_layer2_gap_analyzer.py .....                             [ 35%]
+tests\unit\test_layer2_smt_synthesizer.py .........                      [ 45%]
+tests\unit\test_layer3_acceptance_gate.py ..                             [ 47%]
+tests\unit\test_layer3_domain_validator.py ........                      [ 55%]
+tests\unit\test_layer3_llm_sampler.py ......                             [ 62%]
+tests\unit\test_layer3_prompt_builder.py .....                           [ 67%]
+tests\unit\test_models.py .................                              [ 86%]
+tests\unit\test_orchestrator.py ......                                   [ 92%]
+tests\integration\test_layer1_to_layer2.py ....                          [ 96%]
+tests\integration\test_layer2_to_layer3.py ...                           [100%]
+
+============================= 93 passed in 1.27s ==============================
+
+=== 測試函式清單 ===
+--- test_layer1_to_layer2.py ---
+--- test_layer2_to_layer3.py ---
+--- test_vaccine_e2e.py ---
+--- test_layer1_ast_parser.py ---
+--- test_layer1_coupling_graph.py ---
+--- test_layer1_coverage_engine.py ---
+--- test_layer1_probe_injector.py ---
+--- test_layer2_boolean_derivative.py ---
+--- test_layer2_gap_analyzer.py ---
+--- test_layer2_smt_synthesizer.py ---
+--- test_layer3_acceptance_gate.py ---
+--- test_layer3_domain_validator.py ---
+--- test_layer3_llm_sampler.py ---
+--- test_layer3_prompt_builder.py ---
+--- test_models.py ---
+--- test_orchestrator.py ---

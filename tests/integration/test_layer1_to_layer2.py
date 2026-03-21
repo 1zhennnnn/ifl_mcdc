@@ -254,10 +254,13 @@ def test_smt_result_feeds_bound_spec() -> None:
     assert age_spec is not None, "bound_specs 應包含 age"
     assert age_spec.interval is not None, "age 應有 interval"
     lo, hi = age_spec.interval
-    # BoundSpec.interval = (model_val - 10, model_val + 10)
-    # Z3 預設回傳 age=0（最小可行值），interval = (-10, 10)，hi ≤ 64
-    assert hi <= 64, (
-        f"age interval[1]={hi} 應 ≤ 64（因 c1=age>=65 被固定為 False）"
+    # BoundExtractor: interval = (model_val-10, model_val+10) → midpoint = model_val（精確）
+    # SMT 約束：c1=age>=65 被固定為 False → Z3 model_val 必須 < 65
+    # 不依賴 Z3 回傳最小值，改驗語義：model_val < 65
+    model_age = (lo + hi) / 2
+    assert model_age < 65, (
+        f"Z3 模型 age={model_age:.0f} 應 < 65（c1=age>=65 被固定為 False），"
+        f"實際 interval=({lo:.0f}, {hi:.0f})"
     )
 
     # high_risk 的 BoundSpec：c2 F2T → high_risk 必須為 True

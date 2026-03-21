@@ -1,5 +1,8 @@
 """
-LLM 採樣器：呼叫 LLM 後端，解析 JSON，驗證，重試。
+LLM 採樣器：呼叫 LLM 後端、解析 JSON、重試（僅針對 JSON 解析失敗）。
+
+單一職責：網路層 + JSON 解析。
+領域驗證由 IFLOrchestrator 在迭代迴圈中統一負責。
 
 TC-U-47: 第一次成功回傳
 TC-U-48: 解析 markdown 包裝的 JSON
@@ -15,8 +18,6 @@ import time
 from abc import ABC, abstractmethod
 
 from ifl_mcdc.exceptions import LLMSamplingError
-from ifl_mcdc.layer3.domain_validator import DomainValidator
-from ifl_mcdc.models.validation import ValidationResult
 
 
 # ─────────────────────────────────────────────
@@ -102,32 +103,37 @@ class MockLLMBackend(LLMBackend):
 
 
 class LLMSampler:
-    """呼叫 LLM 後端，重試解析，驗證輸出，記錄 token 消耗。"""
+    """呼叫 LLM 後端，重試解析 JSON，記錄 token 消耗。
+
+    單一職責：僅負責網路層與 JSON 解析。
+    領域驗證由 IFLOrchestrator 在迭代迴圈中統一負責。
+    """
 
     MAX_RETRIES: int = 3
 
     def __init__(
         self,
         backend: LLMBackend,
-        validator: DomainValidator,
         retry_delay: float = 2.0,
     ) -> None:
         self.backend = backend
-        self.validator = validator
         self.retry_delay = retry_delay
         self.token_log: list[dict[str, object]] = []
 
-    def sample(self, prompt: str) -> tuple[dict[str, object], ValidationResult]:
-        """最多重試 MAX_RETRIES 次，回傳第一個通過驗證的 (data, result) 對。
+    def sample(self, prompt: str) -> dict[str, object]:
+        """最多重試 MAX_RETRIES 次，回傳第一個成功解析的 JSON dict。
+
+        僅針對 JSON 解析失敗進行重試（網路錯誤同樣重試）。
+        領域語意驗證不在此層，由 IFLOrchestrator 負責。
 
         Args:
             prompt: Gap-Guided Prompt。
 
         Returns:
-            (parsed_dict, ValidationResult) 元組，ValidationResult.passed=True。
+            解析成功的 dict。
 
         Raises:
-            LLMSamplingError: 全部重試失敗。
+            LLMSamplingError: 全部重試失敗（JSON 解析或網路錯誤）。
         """
         current_prompt = prompt
         last_error: str = ""
@@ -168,11 +174,7 @@ class LLMSampler:
                 last_error = f"JSON 解析失敗：{parse_error}"
                 continue
 
-            result = self.validator.validate(json.dumps(data))
-            if result.passed:
-                return data, result
-
-            last_error = result.to_corrective_prompt()
+            return data
 
         raise LLMSamplingError(
             f"LLM 採樣失敗，已重試 {self.MAX_RETRIES} 次。最後錯誤：{last_error}"
@@ -217,7 +219,7 @@ class LLMSampler:
 
     @staticmethod
     def _build_retry_prompt(original: str, error: str) -> str:
-        """建構重試提示詞。"""
+        """建構 JSON 解析失敗的重試提示詞。"""
         return (
             f"上一次你的回應有以下問題，請重新生成：\n"
             f"{error}\n\n"

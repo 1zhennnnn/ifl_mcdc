@@ -6,21 +6,21 @@
 
 *--- 開發人員完整實作指南 ---*
 
-  ---------------- -----------------------------------
-  **文件類型**     軟體設計文件（SDD）
+  -----------------------------------------------------------------------
+  **文件類型**           軟體設計文件（SDD）
+  ---------------------- ------------------------------------------------
+  **對應 SRS**           SRS_IFL_MCDC_System v1.0
 
-  **對應 SRS**     SRS_IFL_MCDC_System v1.0
+  **版本**               1.0（初稿）
 
-  **版本**         1.0（初稿）
+  **撰寫日期**           2026 年 3 月 18 日
 
-  **撰寫日期**     2026 年 3 月 18 日
+  **目標讀者**           後端開發工程師、DevOps、技術主管
 
-  **目標讀者**     後端開發工程師、DevOps、技術主管
+  **保密等級**           **機密 --- 禁止對外傳閱**
+  -----------------------------------------------------------------------
 
-  **保密等級**     **機密 --- 禁止對外傳閱**
-  ---------------- -----------------------------------
-
-**0　如何閱讀本文件**
+# 0　如何閱讀本文件
 
 > **⚠ 警告** 本文件假設讀者已通讀 SRS
 > v1.0。請勿在未理解需求的情況下直接跳至實作章節，否則你寫出來的東西會很奇怪。
@@ -30,39 +30,39 @@ FR-12）轉化為可直接動手寫程式碼的設計規格，包含類別定義
 
 文件結構如下：
 
-- 第 1 章：整體技術架構選型與目錄結構
+-   第 1 章：整體技術架構選型與目錄結構
 
-- 第 2 章：共用資料模型（Data Model）--- 所有模組都用的類別
+-   第 2 章：共用資料模型（Data Model）--- 所有模組都用的類別
 
-- 第 3 章：Layer 1 靜態分析層實作設計（FR-01 ～ FR-04）
+-   第 3 章：Layer 1 靜態分析層實作設計（FR-01 ～ FR-04）
 
-- 第 4 章：Layer 2 SMT 推理層實作設計（FR-05 ～ FR-08）
+-   第 4 章：Layer 2 SMT 推理層實作設計（FR-05 ～ FR-08）
 
-- 第 5 章：Layer 3 LLM 協同層實作設計（FR-09 ～ FR-12）
+-   第 5 章：Layer 3 LLM 協同層實作設計（FR-09 ～ FR-12）
 
-- 第 6 章：系統整合與 IFL 主控迴圈
+-   第 6 章：系統整合與 IFL 主控迴圈
 
-- 第 7 章：錯誤處理全策略
+-   第 7 章：錯誤處理全策略
 
-- 第 8 章：設定管理與環境佈署
+-   第 8 章：設定管理與環境佈署
 
-- 第 9 章：單元測試與整合測試規格
+-   第 9 章：單元測試與整合測試規格
 
-- 附錄 A：完整 API 介面規格
+-   附錄 A：完整 API 介面規格
 
-- 附錄 B：資料庫 Schema（探針日誌持久化）
+-   附錄 B：資料庫 Schema（探針日誌持久化）
 
-**1　整體技術架構選型**
+# 1　整體技術架構選型
 
-**1.1　技術棧決策**
+## 1.1　技術棧決策
 
 本系統以 Python 3.11+ 為主要實作語言，理由如下：Python ast 模組原生支援
 AST 解析；z3-solver PyPI 套件提供完整 Z3 Python 綁定；主流 LLM
 API（OpenAI、Anthropic、Together.ai）均提供 Python SDK。
 
-  ---------------- ----------------------- ----------------------------------------------------
+  ---------------------------------------------------------------------------------------------
   **元件**         **選用技術**            **選用理由**
-
+  ---------------- ----------------------- ----------------------------------------------------
   AST 解析         ast（Python stdlib）    零外部依賴，原生支援 Python 3.11 所有語法
 
   SMT 求解器       z3-solver==4.13.0       業界標準 SMT 求解器，支援 Python API，UNSAT
@@ -80,9 +80,9 @@ API（OpenAI、Anthropic、Together.ai）均提供 Python SDK。
   測試框架         pytest + pytest-cov     業界標準，支援 fixture、parametrize、覆蓋率報告
 
   型別系統         mypy（strict mode）     強制型別標注，在 CI 階段擋住 90% 的 None 相關 bug
-  ---------------- ----------------------- ----------------------------------------------------
+  ---------------------------------------------------------------------------------------------
 
-**1.2　專案目錄結構**
+## 1.2　專案目錄結構
 
 > **⚠ 警告**
 > 請完全按照以下目錄結構建立專案。不要自行發明目錄名稱，不要把所有東西都丟進
@@ -138,9 +138,9 @@ API（OpenAI、Anthropic、Together.ai）均提供 Python SDK。
 >
 > │ ├── prompt_builder.py \# FR-09: PromptConstructor
 >
-> │ ├── domain_validator.py \# FR-10: DomainValidator
+> │ ├── domain_validator.py \# FR-11: DomainValidator
 >
-> │ ├── llm_sampler.py \# FR-11: LLMSampler
+> │ ├── llm_sampler.py \# FR-10: LLMSampler
 >
 > │ └── acceptance_gate.py \# FR-12: AcceptanceGate
 >
@@ -162,30 +162,30 @@ API（OpenAI、Anthropic、Together.ai）均提供 Python SDK。
 >
 > └── fixtures/
 
-**1.3　系統元件關係圖**
+## 1.3　系統元件關係圖
 
-![](media/b33085557ef6ea09341b9419f9721114c4e6fda7.png){width="5.833333333333333in"
-height="3.5416666666666665in"}
+![](media/image1.png){width="6.601388888888889in"
+height="4.413194444444445in"}
 
 *圖 1-1　元件圖（Component Diagram）--- 三層模組依賴關係*
 
-![](media/0374ad32555547650d3c23a6383b972f6a6e17d4.png){width="5.833333333333333in"
-height="3.5416666666666665in"}
+![](media/image2.png){width="6.601388888888889in"
+height="4.420138888888889in"}
 
 *圖 1-2　類別圖（Class Diagram）--- 核心資料模型*
 
-![](media/af49640cceaf3279f078f0b243867936cdbf91e8.png){width="5.833333333333333in"
-height="3.2291666666666665in"}
+![](media/image3.png){width="6.601388888888889in"
+height="3.841666666666667in"}
 
 *圖 1-3　使用案例圖（Use Case Diagram）*
 
-**2　共用資料模型（models/）**
+# 2　共用資料模型（models/）
 
 本章定義所有模組共用的資料類別。這些是系統的語言------每個開發人員必須熟記這些類別，因為它們像積木一樣被所有層次拼在一起。
 
-**2.1　models/decision_node.py**
+## 2.1　models/decision_node.py
 
-**2.1.1　AtomicCondition**
+### 2.1.1　AtomicCondition
 
 代表一個不可再分割的布林條件，例如 Age \>= 65 或 HighRisk。
 
@@ -218,7 +218,7 @@ height="3.2291666666666665in"}
 > **💡 說明** cond_id 格式必須嚴格遵守 \"D{n}.c{m}\"。n 從 1
 > 開始計數決策節點，m 從 1 開始計數同一決策節點內的條件。
 
-**2.1.2　ConditionSet**
+### 2.1.2　ConditionSet
 
 > \@dataclass
 >
@@ -256,7 +256,7 @@ height="3.2291666666666665in"}
 >
 > return result
 
-**2.1.3　DecisionNode**
+### 2.1.3　DecisionNode
 
 > \@dataclass
 >
@@ -274,9 +274,9 @@ height="3.2291666666666665in"}
 >
 > source_context: str = \"\" \# 前後各 2 行的原始碼片段，供除錯用
 
-**2.2　models/probe_record.py**
+## 2.2　models/probe_record.py
 
-**2.2.1　ProbeRecord**
+### 2.2.1　ProbeRecord
 
 > \@dataclass
 >
@@ -292,7 +292,7 @@ height="3.2291666666666665in"}
 >
 > timestamp: float \# time.time() 的 Unix timestamp
 
-**2.2.2　ProbeLog**
+### 2.2.2　ProbeLog
 
 > \@dataclass
 >
@@ -322,7 +322,7 @@ height="3.2291666666666665in"}
 > **⚠ 警告** ProbeLog 會被 probe()
 > 函式從被測程式碼的執行執行緒呼叫。\_lock 是必要的，不能刪掉。
 
-**2.3　models/coverage_matrix.py**
+## 2.3　models/coverage_matrix.py
 
 > \@dataclass
 >
@@ -380,7 +380,7 @@ height="3.2291666666666665in"}
 >
 > \...
 
-**2.4　models/smt_models.py**
+## 2.4　models/smt_models.py
 
 > \@dataclass
 >
@@ -410,16 +410,16 @@ height="3.2291666666666665in"}
 >
 > solve_time: float = 0.0 \# 求解耗時（秒）
 
-**3　Layer 1：靜態分析層（layer1/）**
+# 3　Layer 1：靜態分析層（layer1/）
 
-![](media/2fcb30e4c98e2ab1e087e136ae90477258ebc624.png){width="4.583333333333333in"
-height="6.041666666666667in"}
+![](media/image4.png){width="5.579037620297463in"
+height="8.850694444444445in"}
 
 *圖 3-1　活動圖（Activity Diagram）--- Layer 1 到 Layer 3 完整執行流程*
 
-**3.1　ast_parser.py（FR-01）**
+## 3.1　ast_parser.py（FR-01）
 
-**3.1.1　類別設計**
+### 3.1.1　類別設計
 
 > import ast
 >
@@ -588,22 +588,22 @@ height="6.041666666666667in"}
 > **🔑 重要** visit_If 必須呼叫 self.generic_visit(node) 以處理巢狀
 > if。若忘記加，內層的 if 節點將被完全跳過，FR-01 驗收測試會失敗。
 
-**3.2　coupling_graph.py（FR-02）**
+## 3.2　coupling_graph.py（FR-02）
 
-**3.2.1　耦合規則說明**
+### 3.2.1　耦合規則說明
 
 耦合圖決定了 SMT 求解器在為條件 cᵢ 合成 Φ_gap
 時，需要額外固定哪些其他條件的值。規則如下：
 
-- 同一個 or BoolOp 的 values 列表內的條件 → OR 耦合 → 在求解 cᵢ
-  時需將其他條件設為 False
+-   同一個 or BoolOp 的 values 列表內的條件 → OR 耦合 → 在求解 cᵢ
+    時需將其他條件設為 False
 
-- 同一個 and BoolOp 的 values 列表內的條件 → AND 耦合 → 在求解 cᵢ
-  時需將其他條件設為 True
+-   同一個 and BoolOp 的 values 列表內的條件 → AND 耦合 → 在求解 cᵢ
+    時需將其他條件設為 True
 
-- 跨 BoolOp 層次的條件（祖先/後裔關係）→ 弱 AND 耦合
+-   跨 BoolOp 層次的條件（祖先/後裔關係）→ 弱 AND 耦合
 
-**3.2.2　完整實作**
+### 3.2.2　完整實作
 
 > import ast
 >
@@ -722,9 +722,9 @@ height="6.041666666666667in"}
 > 耦合（罕見，但多層巢狀時可能發生），優先保留 OR 耦合，因為 OR
 > 耦合的遮罩效應更強，消除成本更高。
 
-**3.3　probe_injector.py（FR-03）**
+## 3.3　probe_injector.py（FR-03）
 
-**3.3.1　核心設計------短路求值繞過**
+### 3.3.1　核心設計------短路求值繞過
 
 > **⚠ 警告** 這是整個系統最容易犯錯的地方。Python 的 or / and
 > 是短路求值：(True or X) 中 X
@@ -759,7 +759,7 @@ height="6.041666666666667in"}
 >
 > approve()
 
-**3.3.2　ProbeInjector 類別實作**
+### 3.3.2　ProbeInjector 類別實作
 
 > import ast, textwrap
 >
@@ -880,7 +880,7 @@ height="6.041666666666667in"}
 >
 > ).body\[0\]
 
-**3.3.3　probe() 函式（注入到被測模組的全域函式）**
+### 3.3.3　probe() 函式（注入到被測模組的全域函式）
 
 > \# 此函式會被動態注入到被測模組的命名空間中
 >
@@ -940,9 +940,9 @@ height="6.041666666666667in"}
 >
 > r.decision = result
 
-**3.4　coverage_engine.py（FR-04）**
+## 3.4　coverage_engine.py（FR-04）
 
-**3.4.1　MCDCMatrix 的建構與更新邏輯**
+### 3.4.1　MCDCMatrix 的建構與更新邏輯
 
 MC/DC 覆蓋率矩陣的核心在於判斷每對測試案例 (Tⱼ, Tₖ) 是否構成某個條件 cᵢ
 的有效獨立對。獨立對的三個判斷條件必須同時成立：
@@ -1110,17 +1110,16 @@ MC/DC 覆蓋率矩陣的核心在於判斷每對測試案例 (Tⱼ, Tₖ) 是否
 >
 > return True
 
-**4　Layer 2：SMT 推理層（layer2/）**
+# 4　Layer 2：SMT 推理層（layer2/）
 
-![](media/c514f60c6b2ffd02effb07fde87c6bf6aea392a4.png){width="5.833333333333333in"
-height="4.0625in"}
+![](media/image5.png){width="5.833333333333333in" height="4.0625in"}
 
 *圖 4-1　循序圖（Sequence Diagram）--- UC-03 核心迭代流程，重點顯示
 Layer 2 與 Z3 的互動*
 
-**4.1　boolean_derivative.py（FR-05）**
+## 4.1　boolean_derivative.py（FR-05）
 
-**4.1.1　布林導數的數學定義**
+### 4.1.1　布林導數的數學定義
 
 對布林函數 f(x) 中的變數 xᵢ，其布林導數定義為：
 
@@ -1129,7 +1128,7 @@ Layer 2 與 Z3 的互動*
 若 ∂f/∂xᵢ = 0（即兩個 f 值相同），則 xᵢ 在當前輸入下被遮罩，改變 xᵢ
 無法影響決策結果。
 
-**4.1.2　實作**
+### 4.1.2　實作
 
 > from z3 import Bool, BoolVal, Solver, sat, unsat, And, Or, Not, Xor,
 > is_true
@@ -1305,7 +1304,7 @@ Layer 2 與 Z3 的互動*
 >
 > return substitute(expr, (var, value))
 
-**4.2　gap_analyzer.py（FR-06）**
+## 4.2　gap_analyzer.py（FR-06）
 
 > from ifl_mcdc.models.coverage_matrix import MCDCMatrix, GapEntry
 >
@@ -1370,9 +1369,9 @@ Layer 2 與 Z3 的互動*
 >
 > return len(coupled) / (cond_set.k - 1)
 
-**4.3　smt_synthesizer.py（FR-07 --- 核心模組）**
+## 4.3　smt_synthesizer.py（FR-07 --- 核心模組）
 
-**4.3.1　整體設計**
+### 4.3.1　整體設計
 
 這是 Layer 2 最複雜的模組。它的任務是把一個缺口（GapEntry）轉化為 Z3
 可求解的 SMT 公式，並從求解結果萃取出具體的可行解空間 Ω。
@@ -1576,7 +1575,7 @@ Layer 2 與 Z3 的互動*
 >
 > return phi
 
-**4.4　ASTToZ3Converter（smt_synthesizer.py 內部類別）**
+## 4.4　ASTToZ3Converter（smt_synthesizer.py 內部類別）
 
 > **⚠ 警告** 這個類別是整個 SMT 層的基礎。任何 AST
 > 節點類型的遺漏都會導致 Z3 無法正確建構
@@ -1697,17 +1696,17 @@ Layer 2 與 Z3 的互動*
 > raise NotImplementedError(f\"Unsupported AST node:
 > {type(node).\_\_name\_\_}\")
 
-**5　Layer 3：LLM 協同層（layer3/）**
+# 5　Layer 3：LLM 協同層（layer3/）
 
-**5.1　prompt_builder.py（FR-09）**
+## 5.1　prompt_builder.py（FR-09）
 
-**5.1.1　Gap-Guided Prompt 模板規格**
+### 5.1.1　Gap-Guided Prompt 模板規格
 
 提示模板分為四個強制段落，每個段落都有明確的資訊對應來源：
 
-  ------------- ----------------------------- ------------------------------------------
+  --------------------------------------------------------------------------------------
   **段落**      **來源**                      **說明**
-
+  ------------- ----------------------------- ------------------------------------------
   §1 醫療情境   DecisionNode.source_context   告訴 LLM
                                               這是什麼系統，確保生成資料有醫療語意
 
@@ -1718,9 +1717,9 @@ Layer 2 與 Z3 的互動*
                                               模型提取，每個變數的精確範圍或合法值集合
 
   §4 輸出規範   函式簽名 + JSON schema        要求 LLM 只輸出純 JSON，禁止說明文字
-  ------------- ----------------------------- ------------------------------------------
+  --------------------------------------------------------------------------------------
 
-**5.1.2　PromptConstructor 實作**
+### 5.1.2　PromptConstructor 實作
 
 > import json
 >
@@ -1860,117 +1859,9 @@ Layer 2 與 Z3 的互動*
 >
 > return prompt\[cut_chars:\]
 
-**5.2　domain_validator.py（FR-10）**
+## 5.2　llm_sampler.py（FR-10）
 
-**5.2.1　DomainRule 資料結構**
-
-> from dataclasses import dataclass
->
-> from typing import Callable, Any
->
-> \@dataclass
->
-> class DomainRule:
->
-> field: str \# 欄位名稱
->
-> description: str \# 人類可讀的規則說明
->
-> validator: Callable\[\[Any\], bool\] \# 回傳 True 表示合法
->
-> \# 醫療預設規則集（可透過 config 擴充）
->
-> DEFAULT_MEDICAL_RULES: list\[DomainRule\] = \[
->
-> DomainRule(\"age\", \"年齡必須在 0～130 之間\",
->
-> lambda v: isinstance(v, int) and 0 \<= v \<= 130),
->
-> DomainRule(\"days_since_last\", \"距上次接種天數必須為非負整數\",
->
-> lambda v: isinstance(v, int) and v \>= 0),
->
-> DomainRule(\"high_risk\", \"高風險標記必須為布林值\",
->
-> lambda v: isinstance(v, bool)),
->
-> DomainRule(\"egg_allergy\", \"過敏標記必須為布林值\",
->
-> lambda v: isinstance(v, bool)),
->
-> \]
-
-**5.2.2　DomainValidator 實作**
-
-> import json
->
-> from ifl_mcdc.models.validation import ValidationResult, Violation
->
-> class DomainValidator:
->
-> def \_\_init\_\_(self, rules: list\[DomainRule\] \| None = None):
->
-> self.rules = rules or DEFAULT_MEDICAL_RULES
->
-> def validate(self, test_case_json: str) -\> ValidationResult:
->
-> \"\"\"
->
-> 驗證 LLM 生成的測試案例 JSON 字串。
->
-> 1\. 先嘗試 JSON 解析
->
-> 2\. 逐一套用 DomainRule
->
-> 3\. 回傳 ValidationResult
->
-> \"\"\"
->
-> try:
->
-> data = json.loads(test_case_json)
->
-> except json.JSONDecodeError as e:
->
-> return ValidationResult(
->
-> passed=False,
->
-> violations=\[Violation(\"\_\_json\_\_\", \"無效的 JSON 格式\",
-> str(e))\]
->
-> )
->
-> violations = \[\]
->
-> for rule in self.rules:
->
-> if rule.field not in data:
->
-> continue \# 欄位不存在不視為違規（可能是選填欄位）
->
-> try:
->
-> ok = rule.validator(data\[rule.field\])
->
-> except Exception:
->
-> ok = False
->
-> if not ok:
->
-> violations.append(
->
-> Violation(rule.field, rule.description, str(data\[rule.field\]))
->
-> )
->
-> return ValidationResult(passed=len(violations) == 0,
-> violations=violations)
-
-**5.3　llm_sampler.py（FR-11）**
-
-**5.3.1　抽象介面設計（Strategy Pattern）**
+### 5.3.1　抽象介面設計（Strategy Pattern）
 
 不同 LLM 供應商的 API 細節各異，使用 Strategy Pattern
 封裝差異，讓呼叫方不感知底層 API。
@@ -2040,11 +1931,7 @@ Layer 2 與 Z3 的互動*
 >
 > return msg.content\[0\].text
 
-**5.3.2　LLMSampler 主類別（含重試與 Token 記帳）**
-
-遵循單一職責原則（SRP）：LLMSampler 僅負責網路層與 JSON 解析，
-不含領域驗證邏輯。領域驗證由 IFLOrchestrator 在迭代迴圈中統一負責，
-確保各模組可獨立替換與測試。
+### 5.3.2　LLMSampler 主類別（含重試與 Token 記帳）
 
 > class LLMSampler:
 >
@@ -2052,21 +1939,24 @@ Layer 2 與 Z3 的互動*
 >
 > RETRY_DELAY = 2.0 \# 秒
 >
-> def \_\_init\_\_(self, backend: LLMBackend):
+> def \_\_init\_\_(self, backend: LLMBackend, validator:
+> DomainValidator):
 >
 > self.backend = backend
 >
+> self.validator = validator
+>
 > self.token_log: list\[dict\] = \[\] \# 記帳用
 >
-> def sample(self, prompt: str) -\> dict:
+> def sample(self, prompt: str) -\> tuple\[dict, ValidationResult\]:
 >
 > \"\"\"
 >
 > 呼叫 LLM 並嘗試解析 JSON。
 >
-> 最多重試 MAX_RETRIES 次（僅針對 JSON 解析失敗）。
+> 最多重試 MAX_RETRIES 次。
 >
-> 回傳 parsed_dict。領域驗證不在此層。
+> 回傳 (parsed_dict, validation_result)。
 >
 > 若所有重試失敗，拋出 LLMSamplingError。
 >
@@ -2189,7 +2079,115 @@ Layer 2 與 Z3 的互動*
 >
 > {original}\"\"\"
 
-**5.4　acceptance_gate.py（FR-12）**
+## 5.3　domain_validator.py（FR-11）
+
+### 5.2.1　DomainRule 資料結構
+
+> from dataclasses import dataclass
+>
+> from typing import Callable, Any
+>
+> \@dataclass
+>
+> class DomainRule:
+>
+> field: str \# 欄位名稱
+>
+> description: str \# 人類可讀的規則說明
+>
+> validator: Callable\[\[Any\], bool\] \# 回傳 True 表示合法
+>
+> \# 醫療預設規則集（可透過 config 擴充）
+>
+> DEFAULT_MEDICAL_RULES: list\[DomainRule\] = \[
+>
+> DomainRule(\"age\", \"年齡必須在 0～130 之間\",
+>
+> lambda v: isinstance(v, int) and 0 \<= v \<= 130),
+>
+> DomainRule(\"days_since_last\", \"距上次接種天數必須為非負整數\",
+>
+> lambda v: isinstance(v, int) and v \>= 0),
+>
+> DomainRule(\"high_risk\", \"高風險標記必須為布林值\",
+>
+> lambda v: isinstance(v, bool)),
+>
+> DomainRule(\"egg_allergy\", \"過敏標記必須為布林值\",
+>
+> lambda v: isinstance(v, bool)),
+>
+> \]
+
+### 5.2.2　DomainValidator 實作
+
+> import json
+>
+> from ifl_mcdc.models.validation import ValidationResult, Violation
+>
+> class DomainValidator:
+>
+> def \_\_init\_\_(self, rules: list\[DomainRule\] \| None = None):
+>
+> self.rules = rules or DEFAULT_MEDICAL_RULES
+>
+> def validate(self, test_case_json: str) -\> ValidationResult:
+>
+> \"\"\"
+>
+> 驗證 LLM 生成的測試案例 JSON 字串。
+>
+> 1\. 先嘗試 JSON 解析
+>
+> 2\. 逐一套用 DomainRule
+>
+> 3\. 回傳 ValidationResult
+>
+> \"\"\"
+>
+> try:
+>
+> data = json.loads(test_case_json)
+>
+> except json.JSONDecodeError as e:
+>
+> return ValidationResult(
+>
+> passed=False,
+>
+> violations=\[Violation(\"\_\_json\_\_\", \"無效的 JSON 格式\",
+> str(e))\]
+>
+> )
+>
+> violations = \[\]
+>
+> for rule in self.rules:
+>
+> if rule.field not in data:
+>
+> continue \# 欄位不存在不視為違規（可能是選填欄位）
+>
+> try:
+>
+> ok = rule.validator(data\[rule.field\])
+>
+> except Exception:
+>
+> ok = False
+>
+> if not ok:
+>
+> violations.append(
+>
+> Violation(rule.field, rule.description, str(data\[rule.field\]))
+>
+> )
+>
+> return ValidationResult(passed=len(violations) == 0,
+> violations=violations)
+
+## 5.4　acceptance_gate.py（FR-12）
 
 > from ifl_mcdc.models.coverage_matrix import MCDCMatrix
 >
@@ -2233,12 +2231,12 @@ Layer 2 與 Z3 的互動*
 >
 > return self.engine.update(matrix, log, new_test_id)
 
-**6　系統整合：IFL 主控迴圈（orchestrator.py）**
+# 6　系統整合：IFL 主控迴圈（orchestrator.py）
 
 這是系統的神經中樞，協調所有三個層次的運作，實作完整的 IFL
 迭代回饋迴圈。
 
-**6.1　IFLOrchestrator 完整實作**
+## 6.1　IFLOrchestrator 完整實作
 
 > from dataclasses import dataclass
 >
@@ -2300,9 +2298,7 @@ Layer 2 與 Z3 的互動*
 >
 > self.prompt = PromptConstructor()
 >
-> self.sampler = LLMSampler(config.llm_backend)
->
-> \# DomainValidator 由 Orchestrator 在迭代迴圈中直接呼叫（SRP）
+> self.sampler = LLMSampler(config.llm_backend, config.domain_validator)
 >
 > self.gate = AcceptanceGate(self.engine)
 >
@@ -2517,18 +2513,19 @@ Layer 2 與 Z3 的互動*
 > module.\_\_dict\_\_\[\"\_ifl_record_decision\"\] =
 > pi.\_ifl_record_decision
 
-**7　錯誤處理全策略**
+# 7　錯誤處理全策略
 
 > **⚠ 警告** 以下所有例外類型必須全部實作，不允許使用裸的 except
 > Exception
 > 來吞掉錯誤。每一個錯誤都必須被記錄，且錯誤訊息必須足夠詳細讓開發者在 5
 > 分鐘內找到根因。
 
-  -------------------------- ---------------------- -------------------------------------- -----------------------
+  -------------------------------------------------------------------------------------------------------------
   **例外類別**               **觸發時機**           **處理策略**                           **日誌格式**
-
-  SyntaxError                ast.parse() 失敗       拋出給呼叫方，附原始碼行號             ERROR \[AST\] line={n},
-                                                                                           file={f}, msg={e}
+  -------------------------- ---------------------- -------------------------------------- --------------------
+  SyntaxError                ast.parse() 失敗       拋出給呼叫方，附原始碼行號             ERROR \[AST\]
+                                                                                           line={n}, file={f},
+                                                                                           msg={e}
 
   CouplingBuildError         耦合圖建構異常         回傳空矩陣，標記 WARNING               WARN \[COUPLING\]
                                                                                            decision_id={d},
@@ -2537,13 +2534,15 @@ Layer 2 與 Z3 的互動*
   ProbeInjectionError        AST 重寫失敗           停止執行，不使用未完整的儀表板化模組   ERROR \[PROBE\]
                                                                                            node={n}, reason={r}
 
-  Z3TimeoutError             Z3 超過 10 秒          標記此缺口為 INFEASIBLE（保守策略）    WARN \[SMT\] gap={g},
-                                                                                           timeout=10s
+  Z3TimeoutError             Z3 超過 10 秒          標記此缺口為 INFEASIBLE（保守策略）    WARN \[SMT\]
+                                                                                           gap={g}, timeout=10s
 
-  Z3UNSATError               Z3 回傳 UNSAT          記錄 UNSAT core，永久標記 infeasible   INFO \[SMT\] gap={g},
+  Z3UNSATError               Z3 回傳 UNSAT          記錄 UNSAT core，永久標記 infeasible   INFO \[SMT\]
+                                                                                           gap={g},
                                                                                            core=\[{c}\]
 
-  LLMSamplingError           重試 3 次後仍失敗      跳過此缺口本輪，下輪重試               ERROR \[LLM\] gap={g},
+  LLMSamplingError           重試 3 次後仍失敗      跳過此缺口本輪，下輪重試               ERROR \[LLM\]
+                                                                                           gap={g},
                                                                                            last_err={e}
 
   DomainValidationError      測試資料違反領域規則   回饋違規報告給 LLM，重試               WARN \[VALID\]
@@ -2553,9 +2552,9 @@ Layer 2 與 Z3 的互動*
   IterationBudgetExhausted   達到 max_iterations    輸出部分覆蓋報告，不拋例外             WARN \[IFL\]
                                                                                            budget={n},
                                                                                            coverage={c:.1%}
-  -------------------------- ---------------------- -------------------------------------- -----------------------
+  -------------------------------------------------------------------------------------------------------------
 
-**8　設定管理與環境部署（config.py）**
+# 8　設定管理與環境部署（config.py）
 
 所有可調整的參數必須集中在 config.py，不允許在任何其他檔案中出現
 hardcoded 的 API key、模型名稱或數值門檻值。
@@ -2632,7 +2631,7 @@ hardcoded 的 API key、模型名稱或數值門檻值。
 >
 > return DomainValidator(DEFAULT_MEDICAL_RULES)
 
-**8.1　.env 範本**
+## 8.1　.env 範本
 
 > \# .env.example（請勿提交到 Git）
 >
@@ -2653,16 +2652,16 @@ hardcoded 的 API key、模型名稱或數值門檻值。
 > **⚠ 警告** .env 檔案必須加入 .gitignore。API key
 > 不得出現在任何版本控制歷史記錄中。一旦洩漏，立即撤銷並重新生成。
 
-**9　單元測試與整合測試規格**
+# 9　單元測試與整合測試規格
 
 以下列出每個模組必須通過的關鍵測試案例。使用 pytest，所有測試必須在 CI
 中 100% 通過才允許合併 PR。
 
-**9.1　Layer 1 單元測試**
+## 9.1　Layer 1 單元測試
 
-  --------------- --------------------------------------- ------------------------------------------------------
+  --------------------------------------------------------------------------------------------------------------
   **模組**        **測試 ID**                             **測試說明**
-
+  --------------- --------------------------------------- ------------------------------------------------------
   ASTParser       test_parse_basic_if                     最簡單的 if (x \> 0) 應識別 1 個 DecisionNode，1
                                                           個條件
 
@@ -2684,13 +2683,13 @@ hardcoded 的 API key、模型名稱或數值門檻值。
                                                           必須回傳 0
 
   MCDCMatrix      test_incremental_update_o_k             逐一加入測試案例，每次更新耗時不超過 O(k\*m) 的 5 倍
-  --------------- --------------------------------------- ------------------------------------------------------
+  --------------------------------------------------------------------------------------------------------------
 
-**9.2　Layer 2 單元測試**
+## 9.2　Layer 2 單元測試
 
-  ---------------------- ------------------------------- ------------------------------
+  -----------------------------------------------------------------------------------
   **模組**               **測試 ID**                     **測試說明**
-
+  ---------------------- ------------------------------- ----------------------------
   BoolDerivativeEngine   test_masking_detected           A and False → A 的導數為
                                                          0（被遮罩），必須正確識別
 
@@ -2698,41 +2697,42 @@ hardcoded 的 API key、模型名稱或數值門檻值。
                                                          的導數為 1，不被遮罩
 
   SMTSynthesizer         test_sat_returns_valid_model    疫苗邏輯的 c₂ F2T 缺口，Z3
-                                                         必須在 10 秒內回傳 SAT，且 age
-                                                         在 \[18,64\]
+                                                         必須在 10 秒內回傳 SAT，且
+                                                         age 在 \[18,64\]
 
   SMTSynthesizer         test_unsat_mutually_exclusive   pregnant=True and sex=Male
                                                          的邏輯，Z3 必須回傳 UNSAT
 
   ASTToZ3Converter       test_compare_nodes              age \>= 65 轉為 z3 Int
                                                          表達式，Z3 可正確求解
-  ---------------------- ------------------------------- ------------------------------
+  -----------------------------------------------------------------------------------
 
-**9.3　Layer 3 單元測試**
+## 9.3　Layer 3 單元測試
 
-  ------------------- -------------------------------------- ------------------------------
+  ---------------------------------------------------------------------------------------
   **模組**            **測試 ID**                            **測試說明**
+  ------------------- -------------------------------------- ----------------------------
+  PromptConstructor   test_prompt_contains_all_constraints   輸出提示必須包含所有
+                                                             BoundSpec 的數值範圍
 
-  PromptConstructor   test_prompt_contains_all_constraints   輸出提示必須包含所有 BoundSpec
-                                                             的數值範圍
+  PromptConstructor   test_prompt_under_2048_tokens          生成提示的估算 token 數必須
+                                                             ≤ 2048
 
-  PromptConstructor   test_prompt_under_2048_tokens          生成提示的估算 token 數必須 ≤
-                                                             2048
+  DomainValidator（FR-11）test_reject_negative_age               age=-5
+                                                             必須被拒絕，violations 非空
 
-  DomainValidator     test_reject_negative_age               age=-5 必須被拒絕，violations
-                                                             非空
+  DomainValidator（FR-11）test_accept_edge_age                   age=0 和 age=130
+                                                             必須通過驗證
 
-  DomainValidator     test_accept_edge_age                   age=0 和 age=130 必須通過驗證
+  LLMSampler（FR-10）     test_parse_markdown_wrapped_json       LLM 回應包在 \`\`\`json
+                                                             \`\`\` 中，仍可正確解析
 
-  LLMSampler          test_parse_markdown_wrapped_json       LLM 回應包在 \`\`\`json \`\`\`
-                                                             中，仍可正確解析
-
-  LLMSampler          test_retry_on_parse_failure            Mock LLM 前 2 次回傳無效
+  LLMSampler（FR-10）     test_retry_on_parse_failure            Mock LLM 前 2 次回傳無效
                                                              JSON，第 3
                                                              次成功，最終應回傳正確結果
-  ------------------- -------------------------------------- ------------------------------
+  ---------------------------------------------------------------------------------------
 
-**9.4　整合測試**
+## 9.4　整合測試
 
 > \# tests/integration/test_vaccine_e2e.py
 >
@@ -2769,13 +2769,13 @@ hardcoded 的 API key、模型名稱或數值門檻值。
 >
 > assert len(result.infeasible_paths) == 0, \"疫苗邏輯不應有不可行路徑\"
 
-**附錄 A　公開 API 介面規格（Python 型別標注版）**
+# 附錄 A　公開 API 介面規格（Python 型別標注版）
 
 以下是所有模組的完整公開介面，按呼叫順序排列。開發人員實作時的方法簽名必須完全一致，否則整合測試將失敗。
 
-  ------------------------------------- --------------------------- ---------------------------
+  ---------------------------------------------------------------------------------------------
   **類別.方法**                         **簽名**                    **回傳類型**
-
+  ------------------------------------- --------------------------- ---------------------------
   ASTParser.parse_file                  (filepath: str \| Path) -\> list\[DecisionNode\]
                                         list\[DecisionNode\]        
 
@@ -2809,20 +2809,21 @@ hardcoded 的 API key、模型名稱或數值門檻值。
                                         bound_specs, func_sig, ctx) 
                                         -\> str                     
 
-  DomainValidator.validate              (test_case_json: str) -\>   ValidationResult
+  DomainValidator.validate  (FR-11)     (test_case_json: str) -\>   ValidationResult
                                         ValidationResult            
 
-  LLMSampler.sample                     (prompt: str) -\> dict      dict（純 JSON 解析結果，
-                                                                   不含領域驗證）
+  LLMSampler.sample         (FR-10)     (prompt: str) -\>           tuple\[dict,
+                                        tuple\[dict,                ValidationResult\]
+                                        ValidationResult\]          
 
   AcceptanceGate.evaluate               (matrix, log, new_test_id)  bool（是否接受）
                                         -\> bool                    
 
   IFLOrchestrator.run                   (source_path: str) -\>      IFLResult
                                         IFLResult                   
-  ------------------------------------- --------------------------- ---------------------------
+  ---------------------------------------------------------------------------------------------
 
-**附錄 B　資料庫 Schema（探針日誌持久化）**
+# 附錄 B　資料庫 Schema（探針日誌持久化）
 
 開發環境使用 SQLite，正式環境切換為 PostgreSQL（同一 Schema）。
 

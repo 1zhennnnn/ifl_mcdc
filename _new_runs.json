@@ -1,0 +1,429 @@
+{
+  "k5_vaccine": {
+    "random": [
+      {
+        "name": "k5_vaccine",
+        "mode": "random",
+        "converged": false,
+        "final_coverage": 0.0,
+        "iteration_count": 0,
+        "total_tokens": 0,
+        "elapsed_seconds": 0.002,
+        "loss_history": [
+          10
+        ],
+        "infeasible_paths": []
+      },
+      {
+        "name": "k5_vaccine",
+        "mode": "random",
+        "converged": false,
+        "final_coverage": 0.0,
+        "iteration_count": 0,
+        "total_tokens": 0,
+        "elapsed_seconds": 0.001,
+        "loss_history": [
+          10
+        ],
+        "infeasible_paths": []
+      },
+      {
+        "name": "k5_vaccine",
+        "mode": "random",
+        "converged": false,
+        "final_coverage": 0.0,
+        "iteration_count": 0,
+        "total_tokens": 0,
+        "elapsed_seconds": 0.001,
+        "loss_history": [
+          10
+        ],
+        "infeasible_paths": []
+      }
+    ],
+    "smt_only": [
+      {
+        "name": "k5_vaccine",
+        "mode": "smt_only",
+        "converged": true,
+        "final_coverage": 1.0,
+        "iteration_count": 4,
+        "total_tokens": 0,
+        "elapsed_seconds": 0.049,
+        "loss_history": [
+          10,
+          8,
+          4,
+          2,
+          0
+        ],
+        "infeasible_paths": []
+      },
+      {
+        "name": "k5_vaccine",
+        "mode": "smt_only",
+        "converged": true,
+        "final_coverage": 1.0,
+        "iteration_count": 3,
+        "total_tokens": 0,
+        "elapsed_seconds": 0.023,
+        "loss_history": [
+          10,
+          6,
+          2,
+          0
+        ],
+        "infeasible_paths": []
+      },
+      {
+        "name": "k5_vaccine",
+        "mode": "smt_only",
+        "converged": true,
+        "final_coverage": 1.0,
+        "iteration_count": 3,
+        "total_tokens": 0,
+        "elapsed_seconds": 0.02,
+        "loss_history": [
+          10,
+          8,
+          2,
+          0
+        ],
+        "infeasible_paths": []
+      }
+    ]
+  },
+  "k8_drug": {
+    "random": [
+      {
+        "name": "k8_drug",
+        "mode": "random",
+        "converged": false,
+        "final_coverage": 0.0,
+        "iteration_count": 0,
+        "total_tokens": 0,
+        "elapsed_seconds": 0.014,
+        "loss_history": [
+          16
+        ],
+        "infeasible_paths": []
+      },
+      {
+        "name": "k8_drug",
+        "mode": "random",
+        "converged": false,
+        "final_coverage": 0.0,
+        "iteration_count": 0,
+        "total_tokens": 0,
+        "elapsed_seconds": 0.003,
+        "loss_history": [
+          16
+        ],
+        "infeasible_paths": []
+      },
+      {
+        "name": "k8_drug",
+        "mode": "random",
+        "converged": false,
+        "final_coverage": 0.0,
+        "iteration_count": 0,
+        "total_tokens": 0,
+        "elapsed_seconds": 0.005,
+        "loss_history": [
+          16
+        ],
+        "infeasible_paths": []
+      }
+    ],
+    "smt_only": [
+      {
+        "name": "k8_drug",
+        "mode": "smt_only",
+        "converged": true,
+        "final_coverage": 1.0,
+        "iteration_count": 8,
+        "total_tokens": 0,
+        "elapsed_seconds": 0.062,
+        "loss_history": [
+          16,
+          14,
+          12,
+          10,
+          8,
+          6,
+          4,
+          2,
+          0
+        ],
+        "infeasible_paths": []
+      },
+      {
+        "name": "k8_drug",
+        "mode": "smt_only",
+        "converged": true,
+        "final_coverage": 1.0,
+        "iteration_count": 8,
+        "total_tokens": 0,
+        "elapsed_seconds": 0.057,
+        "loss_history": [
+          16,
+          14,
+          12,
+          10,
+          8,
+          6,
+          4,
+          2,
+          0
+        ],
+        "infeasible_paths": []
+      },
+      {
+        "name": "k8_drug",
+        "mode": "smt_only",
+        "converged": true,
+        "final_coverage": 1.0,
+        "iteration_count": 8,
+        "total_tokens": 0,
+        "elapsed_seconds": 0.053,
+        "loss_history": [
+          16,
+          14,
+          12,
+          10,
+          8,
+          6,
+          4,
+          2,
+          0
+        ],
+        "infeasible_paths": []
+      }
+    ]
+  },
+  "k9_surgery": {
+    "random": [
+      {
+        "name": "k9_surgery",
+        "mode": "random",
+        "converged": false,
+        "final_coverage": 0.0,
+        "iteration_count": 0,
+        "total_tokens": 0,
+        "elapsed_seconds": 0.002,
+        "loss_history": [
+          18
+        ],
+        "infeasible_paths": []
+      },
+      {
+        "name": "k9_surgery",
+        "mode": "random",
+        "converged": false,
+        "final_coverage": 0.0,
+        "iteration_count": 0,
+        "total_tokens": 0,
+        "elapsed_seconds": 0.001,
+        "loss_history": [
+          18
+        ],
+        "infeasible_paths": []
+      },
+      {
+        "name": "k9_surgery",
+        "mode": "random",
+        "converged": false,
+        "final_coverage": 0.0,
+        "iteration_count": 0,
+        "total_tokens": 0,
+        "elapsed_seconds": 0.002,
+        "loss_history": [
+          18
+        ],
+        "infeasible_paths": []
+      }
+    ],
+    "smt_only": [
+      {
+        "name": "k9_surgery",
+        "mode": "smt_only",
+        "converged": true,
+        "final_coverage": 1.0,
+        "iteration_count": 9,
+        "total_tokens": 0,
+        "elapsed_seconds": 0.107,
+        "loss_history": [
+          18,
+          16,
+          14,
+          12,
+          10,
+          8,
+          6,
+          4,
+          2,
+          0
+        ],
+        "infeasible_paths": []
+      },
+      {
+        "name": "k9_surgery",
+        "mode": "smt_only",
+        "converged": true,
+        "final_coverage": 1.0,
+        "iteration_count": 9,
+        "total_tokens": 0,
+        "elapsed_seconds": 0.109,
+        "loss_history": [
+          18,
+          16,
+          14,
+          12,
+          10,
+          8,
+          6,
+          4,
+          2,
+          0
+        ],
+        "infeasible_paths": []
+      },
+      {
+        "name": "k9_surgery",
+        "mode": "smt_only",
+        "converged": true,
+        "final_coverage": 1.0,
+        "iteration_count": 9,
+        "total_tokens": 0,
+        "elapsed_seconds": 0.089,
+        "loss_history": [
+          18,
+          16,
+          14,
+          12,
+          10,
+          8,
+          6,
+          4,
+          2,
+          0
+        ],
+        "infeasible_paths": []
+      }
+    ]
+  },
+  "k10_icu": {
+    "random": [
+      {
+        "name": "k10_icu",
+        "mode": "random",
+        "converged": false,
+        "final_coverage": 0.0,
+        "iteration_count": 0,
+        "total_tokens": 0,
+        "elapsed_seconds": 0.001,
+        "loss_history": [
+          20
+        ],
+        "infeasible_paths": []
+      },
+      {
+        "name": "k10_icu",
+        "mode": "random",
+        "converged": false,
+        "final_coverage": 0.0,
+        "iteration_count": 0,
+        "total_tokens": 0,
+        "elapsed_seconds": 0.001,
+        "loss_history": [
+          20
+        ],
+        "infeasible_paths": []
+      },
+      {
+        "name": "k10_icu",
+        "mode": "random",
+        "converged": false,
+        "final_coverage": 0.0,
+        "iteration_count": 0,
+        "total_tokens": 0,
+        "elapsed_seconds": 0.001,
+        "loss_history": [
+          20
+        ],
+        "infeasible_paths": []
+      }
+    ],
+    "smt_only": [
+      {
+        "name": "k10_icu",
+        "mode": "smt_only",
+        "converged": true,
+        "final_coverage": 1.0,
+        "iteration_count": 10,
+        "total_tokens": 0,
+        "elapsed_seconds": 0.11,
+        "loss_history": [
+          20,
+          18,
+          16,
+          14,
+          12,
+          10,
+          8,
+          6,
+          4,
+          2,
+          0
+        ],
+        "infeasible_paths": []
+      },
+      {
+        "name": "k10_icu",
+        "mode": "smt_only",
+        "converged": true,
+        "final_coverage": 1.0,
+        "iteration_count": 10,
+        "total_tokens": 0,
+        "elapsed_seconds": 0.088,
+        "loss_history": [
+          20,
+          18,
+          16,
+          14,
+          12,
+          10,
+          8,
+          6,
+          4,
+          2,
+          0
+        ],
+        "infeasible_paths": []
+      },
+      {
+        "name": "k10_icu",
+        "mode": "smt_only",
+        "converged": true,
+        "final_coverage": 1.0,
+        "iteration_count": 10,
+        "total_tokens": 0,
+        "elapsed_seconds": 0.108,
+        "loss_history": [
+          20,
+          18,
+          16,
+          14,
+          12,
+          10,
+          8,
+          6,
+          4,
+          2,
+          0
+        ],
+        "infeasible_paths": []
+      }
+    ]
+  }
+}

@@ -68,8 +68,15 @@ def test_vaccine_c2_f2t_sat():  # type: ignore[no-untyped-def]
     assert age_spec is not None, "bound_specs 應包含 age"
     assert age_spec.interval is not None, "age 應有 interval"
     lo, hi = age_spec.interval
-    # 解應在 [8, 28]（18±10）或更寬，但中點應在 18 左右
     assert lo < hi, "interval 應為合法區間"
+    # BoundExtractor: interval = (model_val-10, model_val+10) → midpoint = model_val（精確）
+    # SMT 約束：age>=18=True（target）且 age>=65=False（OR 夥伴固定為 False）
+    # 故 Z3 model_val 必須在 [18, 64]
+    model_age = (lo + hi) / 2
+    assert 18 <= model_age < 65, (
+        f"Z3 model age={model_age:.0f} 應在 [18, 64]"
+        f"（target age>=18=True，OR 夥伴 age>=65=False），實際 interval=({lo}, {hi})"
+    )
 
 
 # ─────────────────────────────────────────────
