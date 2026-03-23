@@ -14,6 +14,7 @@ TC-U-33: 多重比較連鎖（a < b < c）
 from __future__ import annotations
 
 import ast
+import random as _random
 import time
 
 import z3
@@ -387,7 +388,10 @@ class SMTConstraintSynthesizer:
             if var_type == "bool":
                 phi.append(z3_var == BoolVal(bool(true_val)))
             else:
-                phi.append(z3_var == int(str(true_val)))
+                try:
+                    phi.append(z3_var == int(str(true_val)))
+                except ValueError:
+                    phi.append(z3_var == int(float(str(true_val))))
 
         # (C2) 對使用目標變數的非目標條件，施加其 True 側條件值不變的約束
         # （由於目標變數在補集中為自由變數，共用目標變數的非目標條件可能改變值）
@@ -422,12 +426,37 @@ class SMTConstraintSynthesizer:
                 else:
                     phi.append(z3_var >= 0)  # type: ignore[operator]
 
+        # (E) 隨機偏移：為目標變數加入隨機下界，避免 Z3 跨 run 永遠回傳最小解
+        phi_with_offset = list(phi)
+        has_offset = False
+        for var_name, z3_var in z3_vars.items():
+            if var_name not in target_var_names:
+                continue
+            if domain_types.get(var_name, "int") != "int":
+                continue
+            if not (self.domain_bounds and var_name in self.domain_bounds):
+                continue
+            lo_db, hi_db = self.domain_bounds[var_name][0], self.domain_bounds[var_name][1]
+            span = hi_db - lo_db
+            if span >= 4:
+                offset = _random.randint(0, max(0, span // 4))
+                if offset > 0:
+                    phi_with_offset.append(z3_var >= lo_db + offset)  # type: ignore[operator]
+                    has_offset = True
+
         s = Solver()
         s.set("timeout", self.TIMEOUT_MS)
-        s.add(phi)
+        s.add(phi_with_offset)
 
         try:
-            if s.check() != sat:
+            check_result = s.check()
+            if check_result != sat and has_offset:
+                # 偏移使求解失敗，回退到無偏移版本
+                s = Solver()
+                s.set("timeout", self.TIMEOUT_MS)
+                s.add(phi)
+                check_result = s.check()
+            if check_result != sat:
                 return None
             comp_model = s.model()
             result: dict[str, object] = {}

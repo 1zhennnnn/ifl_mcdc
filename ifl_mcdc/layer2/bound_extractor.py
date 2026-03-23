@@ -81,12 +81,26 @@ class BoundExtractor:
                         int_val = int(str(model_val))
                     except (ValueError, TypeError):
                         int_val = 0
+                    sub_intervals: list[tuple[float, float]] | None = None
                     if domain_bounds and var_name in domain_bounds:
                         lo, hi = domain_bounds[var_name][0], domain_bounds[var_name][1]
                         interval: tuple[float, float] = (
                             float(max(lo, int_val)),
                             float(min(hi, int_val + 10)),
                         )
+                        span = hi - lo
+                        if span > 0:
+                            step = span / 3.0
+                            zone_low = (float(lo), float(lo + step))
+                            zone_mid = (float(lo + step), float(lo + 2 * step))
+                            zone_high = (float(lo + 2 * step), float(hi))
+                            # 根據 model_val 位置：index 0=邊界區，1=中間區，2=極端區
+                            if int_val <= lo + step:
+                                sub_intervals = [zone_low, zone_mid, zone_high]
+                            elif int_val >= lo + 2 * step:
+                                sub_intervals = [zone_high, zone_mid, zone_low]
+                            else:
+                                sub_intervals = [zone_mid, zone_low, zone_high]
                     else:
                         interval = (float(int_val), float(int_val + 10))
                     specs.append(
@@ -95,6 +109,7 @@ class BoundExtractor:
                             var_type="int",
                             interval=interval,
                             valid_set=None,
+                            sub_intervals=sub_intervals,
                         )
                     )
 

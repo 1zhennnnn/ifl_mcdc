@@ -56,7 +56,7 @@ def test_contains_all_bound_specs():  # type: ignore[no-untyped-def]
         domain_context="疫苗接種資格",
     )
 
-    assert "【臨床情境引導】" in prompt, "§3 標題應為【臨床情境引導】"
+    assert "【約束條件】" in prompt, "§3 標題應為【約束條件】"
     for bs in bound_specs:
         assert bs.var_name in prompt, f"BoundSpec {bs.var_name} 的變數名稱應出現在提示詞中"
     # int 型應有 「必須在...到...之間」描述
@@ -116,7 +116,7 @@ def test_section_preservation():  # type: ignore[no-untyped-def]
     )
 
     # §3 標題必須存在
-    assert "【臨床情境引導】" in prompt, "§3 標題必須保留"
+    assert "【約束條件】" in prompt, "§3 標題必須保留"
     # §4 標題必須存在
     assert "【輸出格式】" in prompt, "§4 標題必須保留"
     # 每個 BoundSpec 的變數名稱必須存在

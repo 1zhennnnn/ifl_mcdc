@@ -5,6 +5,9 @@
 """
 from __future__ import annotations
 
+from pathlib import Path
+from typing import Any
+
 from pydantic import Field
 from pydantic_settings import BaseSettings
 
@@ -19,7 +22,7 @@ class IFLConfig(BaseSettings):
 
     # ── LLM ──
     llm_provider: str = Field(default="openai")
-    llm_model: str = Field(default="gpt-4o")
+    llm_model: str = Field(default="gpt-4.1-mini")
     llm_api_key: str = Field(default="")
     llm_temperature: float = Field(default=0.9)
 
@@ -54,6 +57,22 @@ class IFLConfig(BaseSettings):
             "days_since_last": [0, 3650],
         }
     )
+
+    # ── 臨床比例資料 ──
+    fixture_name: str = Field(default="")
+    clinical_profile_path: Path | None = Field(default=None)
+
+    # ── 多樣性情境提示（輪換注入 prompt）──
+    scenarios: list[str] = Field(default=[])
+
+    @property
+    def clinical_profile(self) -> dict[str, Any] | None:
+        """從 clinical_profiles.json 讀取對應 fixture 的臨床比例資料。"""
+        if not self.fixture_name:
+            return None
+        from ifl_mcdc.data.clinical_profile_loader import ClinicalProfileLoader  # noqa: PLC0415
+        loader = ClinicalProfileLoader(self.clinical_profile_path)
+        return loader.load(self.fixture_name)
 
     @property
     def llm_backend(self) -> LLMBackend:

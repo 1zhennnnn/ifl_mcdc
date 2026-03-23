@@ -28,6 +28,8 @@ class BoundSpec:
     interval: tuple[float, float] | None        # 數值型：(min, max)
     valid_set: frozenset[object] | None         # 類別型：允許的值集合
     medical_unit: str = ""
+    sub_intervals: list[tuple[float, float]] | None = field(default=None)
+    # 長尾邊界覆蓋用的三個子區間，index 0=邊界區（靠近臨界點）、1=中間區、2=極端區
 
     def to_prompt_str(self) -> str:
         """回傳人類可讀的約束描述。

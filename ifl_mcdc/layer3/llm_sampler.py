@@ -44,7 +44,7 @@ class OpenAIBackend(LLMBackend):
 
     def __init__(
         self,
-        model: str = "gpt-4o",
+        model: str = "gpt-4.1-mini",
         api_key: str = "",
         temperature: float = 0.3,
     ) -> None:

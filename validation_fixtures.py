@@ -31,6 +31,7 @@ class FixtureSpec:
     scenarios: list[str]
     func_def: str
     prompt_fields_json: str
+    fixture_name: str = ""   # 對應 clinical_profiles.json 的 key
 
 
 # ── 共用 bool 規則產生器 ─────────────────────────────────────────
@@ -112,6 +113,7 @@ def check_loan_approval(credit_score, annual_income, loan_amount, employed, has_
         return True
     return False""",
     prompt_fields_json='{"credit_score": int, "annual_income": int, "loan_amount": int, "employed": bool, "has_collateral": bool, "bankruptcy_history": bool}',
+    fixture_name="loan_approval",
 )
 
 
@@ -180,6 +182,7 @@ def check_surgery_risk(age, obese, has_diabetes, has_hypertension, is_smoker, lo
         return True
     return False""",
     prompt_fields_json='{"age": int, "obese": bool, "has_diabetes": bool, "has_hypertension": bool, "is_smoker": bool, "low_hemoglobin": bool, "low_platelets": bool, "cardiac_history": bool, "has_copd": bool}',
+    fixture_name="surgery_risk",
 )
 
 
@@ -253,6 +256,7 @@ def check_icu_admission(age, low_bp, high_heart_rate, high_resp_rate, high_temp,
         return True
     return False""",
     prompt_fields_json='{"age": int, "low_bp": bool, "high_heart_rate": bool, "high_resp_rate": bool, "high_temp": bool, "low_gcs": bool, "low_oxygen": bool, "low_urine": bool, "high_creatinine": bool, "sepsis": bool}',
+    fixture_name="icu_admission",
 )
 
 ALL_SPECS: list[FixtureSpec] = [LOAN_SPEC, SURGERY_SPEC, ICU_SPEC]

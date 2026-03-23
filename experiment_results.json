@@ -1,0 +1,377 @@
+{
+  "meta": {
+    "fixture": "tests/fixtures/vaccine_eligibility.py",
+    "runs": 3,
+    "bool_fields": [
+      "high_risk",
+      "egg_allergy"
+    ],
+    "int_fields": {
+      "age": [
+        0,
+        130
+      ],
+      "days_since_last": [
+        0,
+        3650
+      ]
+    }
+  },
+  "group_A_random": [
+    {
+      "run": 1,
+      "converged": false,
+      "coverage": 0.0,
+      "iterations": 0,
+      "tokens": 0,
+      "time": 0.0077326297760009766,
+      "total_cases": 3,
+      "valid_cases": 3,
+      "valid_ratio": 1.0,
+      "diversity": {
+        "D1": {
+          "total": 3,
+          "unique": 3,
+          "duplicates": 0,
+          "uniqueness_rate": 1.0,
+          "pass": true
+        },
+        "D2": {
+          "skip": true,
+          "note": "樣本數=3 < 5，略過 D2（Shannon Entropy）"
+        },
+        "D3": {
+          "skip": true,
+          "note": "樣本數=3 < 5，略過 D3（Wasserstein）"
+        }
+      },
+      "note": "n=3，僅供參考"
+    },
+    {
+      "run": 2,
+      "converged": false,
+      "coverage": 0.0,
+      "iterations": 0,
+      "tokens": 0,
+      "time": 0.004034519195556641,
+      "total_cases": 3,
+      "valid_cases": 3,
+      "valid_ratio": 1.0,
+      "diversity": {
+        "D1": {
+          "total": 3,
+          "unique": 3,
+          "duplicates": 0,
+          "uniqueness_rate": 1.0,
+          "pass": true
+        },
+        "D2": {
+          "skip": true,
+          "note": "樣本數=3 < 5，略過 D2（Shannon Entropy）"
+        },
+        "D3": {
+          "skip": true,
+          "note": "樣本數=3 < 5，略過 D3（Wasserstein）"
+        }
+      },
+      "note": "n=3，僅供參考"
+    },
+    {
+      "run": 3,
+      "converged": false,
+      "coverage": 0.0,
+      "iterations": 0,
+      "tokens": 0,
+      "time": 0.0037686824798583984,
+      "total_cases": 3,
+      "valid_cases": 3,
+      "valid_ratio": 1.0,
+      "diversity": {
+        "D1": {
+          "total": 3,
+          "unique": 3,
+          "duplicates": 0,
+          "uniqueness_rate": 1.0,
+          "pass": true
+        },
+        "D2": {
+          "skip": true,
+          "note": "樣本數=3 < 5，略過 D2（Shannon Entropy）"
+        },
+        "D3": {
+          "skip": true,
+          "note": "樣本數=3 < 5，略過 D3（Wasserstein）"
+        }
+      },
+      "note": "n=3，僅供參考"
+    }
+  ],
+  "group_B_llm": [
+    {
+      "run": 1,
+      "converged": false,
+      "coverage": 0.2,
+      "iterations": 10,
+      "tokens": 188,
+      "time": 22.361155033111572,
+      "total_cases": 10,
+      "valid_cases": 10,
+      "valid_ratio": 1.0,
+      "diversity": {
+        "D1": {
+          "total": 10,
+          "unique": 8,
+          "duplicates": 2,
+          "uniqueness_rate": 0.8,
+          "pass": true
+        },
+        "D2": {
+          "high_risk": {
+            "true_rate": 0.5,
+            "entropy": 1.0,
+            "pass": true,
+            "structural_bias": false
+          },
+          "egg_allergy": {
+            "true_rate": 0.3,
+            "entropy": 0.8813,
+            "pass": true,
+            "structural_bias": false
+          }
+        },
+        "D3": {
+          "age": {
+            "wasserstein": 0.1291,
+            "pass": true
+          },
+          "days_since_last": {
+            "wasserstein": 0.2709,
+            "pass": false
+          }
+        }
+      }
+    },
+    {
+      "run": 2,
+      "converged": false,
+      "coverage": 0.0,
+      "iterations": 10,
+      "tokens": 190,
+      "time": 17.120172262191772,
+      "total_cases": 10,
+      "valid_cases": 10,
+      "valid_ratio": 1.0,
+      "diversity": {
+        "D1": {
+          "total": 10,
+          "unique": 8,
+          "duplicates": 2,
+          "uniqueness_rate": 0.8,
+          "pass": true
+        },
+        "D2": {
+          "high_risk": {
+            "true_rate": 0.4,
+            "entropy": 0.971,
+            "pass": true,
+            "structural_bias": false
+          },
+          "egg_allergy": {
+            "true_rate": 0.4,
+            "entropy": 0.971,
+            "pass": true,
+            "structural_bias": false
+          }
+        },
+        "D3": {
+          "age": {
+            "wasserstein": 0.1621,
+            "pass": false
+          },
+          "days_since_last": {
+            "wasserstein": 0.2442,
+            "pass": false
+          }
+        }
+      }
+    },
+    {
+      "run": 3,
+      "converged": false,
+      "coverage": 0.0,
+      "iterations": 10,
+      "tokens": 186,
+      "time": 13.793754816055298,
+      "total_cases": 10,
+      "valid_cases": 10,
+      "valid_ratio": 1.0,
+      "diversity": {
+        "D1": {
+          "total": 10,
+          "unique": 8,
+          "duplicates": 2,
+          "uniqueness_rate": 0.8,
+          "pass": true
+        },
+        "D2": {
+          "high_risk": {
+            "true_rate": 0.3,
+            "entropy": 0.8813,
+            "pass": true,
+            "structural_bias": false
+          },
+          "egg_allergy": {
+            "true_rate": 0.4,
+            "entropy": 0.971,
+            "pass": true,
+            "structural_bias": false
+          }
+        },
+        "D3": {
+          "age": {
+            "wasserstein": 0.1783,
+            "pass": false
+          },
+          "days_since_last": {
+            "wasserstein": 0.2515,
+            "pass": false
+          }
+        }
+      }
+    }
+  ],
+  "group_C_ifl": [
+    {
+      "run": 1,
+      "converged": true,
+      "coverage": 1.0,
+      "iterations": 5,
+      "tokens": 151,
+      "time": 16.213547229766846,
+      "total_cases": 7,
+      "valid_cases": 5,
+      "valid_ratio": 1.0,
+      "diversity": {
+        "D1": {
+          "total": 13,
+          "unique": 13,
+          "duplicates": 0,
+          "uniqueness_rate": 1.0,
+          "pass": true
+        },
+        "D2": {
+          "high_risk": {
+            "true_rate": 0.6154,
+            "entropy": 0.9612,
+            "pass": true,
+            "structural_bias": false
+          },
+          "egg_allergy": {
+            "true_rate": 0.2308,
+            "entropy": 0.7793,
+            "pass": true,
+            "structural_bias": false
+          }
+        },
+        "D3": {
+          "age": {
+            "wasserstein": 0.1261,
+            "pass": true
+          },
+          "days_since_last": {
+            "wasserstein": 0.0628,
+            "pass": true
+          }
+        }
+      }
+    },
+    {
+      "run": 2,
+      "converged": true,
+      "coverage": 1.0,
+      "iterations": 5,
+      "tokens": 131,
+      "time": 12.899524688720703,
+      "total_cases": 7,
+      "valid_cases": 5,
+      "valid_ratio": 1.0,
+      "diversity": {
+        "D1": {
+          "total": 12,
+          "unique": 11,
+          "duplicates": 1,
+          "uniqueness_rate": 0.9167,
+          "pass": true
+        },
+        "D2": {
+          "high_risk": {
+            "true_rate": 0.75,
+            "entropy": 0.8113,
+            "pass": true,
+            "structural_bias": false
+          },
+          "egg_allergy": {
+            "true_rate": 0.1667,
+            "entropy": 0.65,
+            "pass": false,
+            "structural_bias": false
+          }
+        },
+        "D3": {
+          "age": {
+            "wasserstein": 0.0802,
+            "pass": true
+          },
+          "days_since_last": {
+            "wasserstein": 0.1246,
+            "pass": true
+          }
+        }
+      }
+    },
+    {
+      "run": 3,
+      "converged": true,
+      "coverage": 1.0,
+      "iterations": 4,
+      "tokens": 92,
+      "time": 8.80923318862915,
+      "total_cases": 6,
+      "valid_cases": 4,
+      "valid_ratio": 1.0,
+      "diversity": {
+        "D1": {
+          "total": 10,
+          "unique": 10,
+          "duplicates": 0,
+          "uniqueness_rate": 1.0,
+          "pass": true
+        },
+        "D2": {
+          "high_risk": {
+            "true_rate": 0.6,
+            "entropy": 0.971,
+            "pass": true,
+            "structural_bias": false
+          },
+          "egg_allergy": {
+            "true_rate": 0.1,
+            "entropy": 0.469,
+            "pass": false,
+            "structural_bias": false
+          }
+        },
+        "D3": {
+          "age": {
+            "wasserstein": 0.0563,
+            "pass": true
+          },
+          "days_since_last": {
+            "wasserstein": 0.1006,
+            "pass": true
+          }
+        }
+      }
+    }
+  ]
+}
